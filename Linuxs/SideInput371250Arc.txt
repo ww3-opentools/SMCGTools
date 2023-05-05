@@ -1,0 +1,6 @@
+SMC371250A
+    4500     5400   5   ##  NCL,  NFC,  MRL
+    8192     5400   1   ##  NLon, NLat, NPol
+'../DatGMC/SMC371250BArc.dat'
+ .TRUE.
+
