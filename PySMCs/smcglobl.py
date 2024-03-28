@@ -5,7 +5,7 @@
 ##  Last updated:  JGLi09Jul2021
 """
 
-def smcglobl(cel, nvrts,ncels,svrts,scels,colrs, config, Arctic=True, 
+def smcglobl(cel,nvrts,ncels,svrts,scels,colrs,config,Arctic=True,fsize=12.0, 
              mdlname='SMC', buoys='', psfile='output.ps', nmark=0,smark=0):
 
     """ Draw SMC grid in global view or as 2 hemisheres.
@@ -59,12 +59,16 @@ def smcglobl(cel, nvrts,ncels,svrts,scels,colrs, config, Arctic=True,
 ##  Use only first 131 colors in colrs(0:255). 
     depth, factr, cstar, marks, ncstr, nclrm = scale_depth(nclrm=131)
 
+##  Alternative font sizes.
+    asize=1.25*fsize 
+    bsize=1.50*fsize
+
 ##  Cell color is decided by its depth value, dry cells use default 0 color.
-    ndeps = np.zeros( (nc), dtype=np.int )
+    ndeps = np.zeros( (nc), dtype=int )
     for j in range(nc):
         if( cel[j,4] > 0 ):
-            ndeps[j] = ncstr + np.rint( (cstar-np.log10(cel[j,4]))*factr ).astype(np.int)
-#   ndeps = ncstr + np.rint( (cstar-np.log10(cel[:,4]))*factr ).astype(np.int)
+            ndeps[j] = ncstr + np.rint( (cstar-np.log10(cel[j,4]+11))*factr ).astype(int)
+#   ndeps = ncstr + np.rint( (cstar-np.log10(cel[:,4]))*factr ).astype(int)
 
 ##  Set up first subplot and axis for northern hemisphere
     print (" Drawing north hemisphere cells ... ")
@@ -120,11 +124,11 @@ def smcglobl(cel, nvrts,ncels,svrts,scels,colrs, config, Arctic=True,
     for i in range(len(depth)):
         m = marks[i]
         plt.text(xkeys[m], ykeys[0]+1.15*(ykeys[1]-ykeys[0]), str(depth[i]),
-            horizontalalignment='center', fontsize=11, color='b' )
+            horizontalalignment='center', fontsize=fsize, color='b' )
 #           rotation=-90,verticalalignment='center', fontsize=11, color='b' )
 
     plt.text(xkeys[marks[0]], ykeys[0]+2.0*(ykeys[1]-ykeys[0]), 'Depth m',
-            horizontalalignment='left', fontsize=15, color='k' )
+            horizontalalignment='left', fontsize=asize, color='k' )
 #        rotation=-90,verticalalignment='center', fontsize=15, color='k' )
 
 #;  Overlay buoy sits on grid map if buoy file is provided.
@@ -132,8 +136,8 @@ def smcglobl(cel, nvrts,ncels,svrts,scels,colrs, config, Arctic=True,
         hdr, buoyll = readtext(buoys)
         nmbu=int(hdr[0])
         buoyids=buoyll[:,0].astype(str)
-        buoylat=buoyll[:,1].astype(np.float)
-        buoylon=buoyll[:,2].astype(np.float)
+        buoylat=buoyll[:,1].astype(float)
+        buoylon=buoyll[:,2].astype(float)
 
 #; Convert slat slon to elat elon with given new pole
         elat,elon,sxc,syc = steromap(buoylat,buoylon,plat,plon,Pangl=pangle)
@@ -144,7 +148,8 @@ def smcglobl(cel, nvrts,ncels,svrts,scels,colrs, config, Arctic=True,
             if( (elat[i] >= 0.0) and (rngsxy[0] < sxc[i] < rngsxy[1])
                                  and (rngsxy[2] < syc[i] < rngsxy[3]) ):
                 print (' {:6} {:8.3f} {:8.3f}'.format( buoyids[i], buoylat[i], buoylon[i] ) )
-                txtsz= 5+ int( np.sqrt( abs(np.sin(elat[i]*d2rad)) )*8.0 )
+#               txtsz= 5+ int( np.sqrt( abs(np.sin(elat[i]*d2rad)) )*8.0 )
+                txtsz= (1.0 + np.sqrt( abs(np.sin(elat[i]*d2rad)) ))*fsize*0.5 
                 plt.text(sxc[i], syc[i], 'r',  fontsize=txtsz,
                      horizontalalignment='center', color='r' )
                 plt.text(sxc[i], syc[i], '.',  fontsize=txtsz*2,
@@ -166,12 +171,22 @@ def smcglobl(cel, nvrts,ncels,svrts,scels,colrs, config, Arctic=True,
 ## Select cells for one subplot and create verts and pcolr. 
     pcface = []
     pcedge = []
+    if( Arctic ): jn=-jm-int(j3/3)
+
 #   for i in scels:
     kend = len(scels)
     for k in range(kend):
         i = scels[k]
+##  Mark the Antarctic map-east reference region, if any, within jn and jn+j3
+##  where jn = -jm - j3/3  is symmetrical to the Arctic map-east region jm row. 
+        if( Arctic and cel[i,1] == jn+j3 ):
+            pcface.append(colrs(246))
+            pcedge.append(colrs(246))
+        elif( Arctic and cel[i,1] == jn ):
+            pcface.append(colrs(168))
+            pcedge.append(colrs(168))
 ##  Fill last nmark cells to be red.  JGLi03Sep2020
-        if( k >= kend - smark ):
+        elif( k >= kend - smark ):
             pcface.append(colrs(250))
             pcedge.append(colrs(250))
         else:
@@ -192,14 +207,20 @@ def smcglobl(cel, nvrts,ncels,svrts,scels,colrs, config, Arctic=True,
     dpy= 0.6 
 
     plt.text(tpx, tpy+dpy*0.5, mdlname+' Grid',  
-             horizontalalignment='center', fontsize=15, color='k' )
+             horizontalalignment='center', fontsize=asize, color='k' )
     plt.text(tpx, tpy+dpy*2.0, 'NC='+str(ncgrd), 
-             horizontalalignment='center', fontsize=13, color='r' )
+             horizontalalignment='center', fontsize=fsize, color='r' )
+
+    if( nmark + smark > 0 ):
+        plt.text(tpx, tpy+dpy*3.0, 'NM='+str(nmark+smark), 
+             horizontalalignment='center', fontsize=fsize, color='r' )
+        tpy = tpy + dpy
+
     if( Arctic ):
         plt.text(tpx, tpy+dpy*3.0, 'NA='+str(na), 
-             horizontalalignment='center', fontsize=13, color='r' )
+             horizontalalignment='center', fontsize=fsize, color='r' )
         plt.text(tpx, tpy+dpy*4.0, 'NB='+str(nb), 
-             horizontalalignment='center', fontsize=13, color='r' )
+             horizontalalignment='center', fontsize=fsize, color='r' )
 
 ##  Draw colorbar for ax2.
     xkeys, ykeys, clrply = colrboxy(clrbxy, colrs, marks, nclrm=nclrm)
@@ -207,12 +228,12 @@ def smcglobl(cel, nvrts,ncels,svrts,scels,colrs, config, Arctic=True,
     for i in range(len(depth)):
         m = marks[i]
         plt.text(xkeys[m], ykeys[0]+1.18*(ykeys[1]-ykeys[0]), str(depth[i]),
-            horizontalalignment='center', fontsize=11, color='b' )
+            horizontalalignment='center', fontsize=fsize, color='b' )
 #           verticalalignment='center', fontsize=11, color='b' )
 #           rotation=-90,verticalalignment='center', fontsize=11, color='b' )
 
     plt.text(xkeys[marks[-1]], ykeys[0]+2.0*(ykeys[1]-ykeys[0]), 'Depth m',
-            horizontalalignment='right', fontsize=15, color='k' )
+            horizontalalignment='right', fontsize=asize, color='k' )
 #        rotation=-90,verticalalignment='center', fontsize=15, color='k' )
 
 #;  Overlay buoy sits on grid map if buoy file is provided.
@@ -225,7 +246,7 @@ def smcglobl(cel, nvrts,ncels,svrts,scels,colrs, config, Arctic=True,
                                 and (rngsxy[2] < syc[i] < rngsxy[3]) ):
                 print (' {:6} {:8.3f} {:8.3f}'.format( buoyids[i], buoylat[i], buoylon[i] ) )
 #               txtsz=int( abs(np.sin(elat[i]*d2rad)*12.0) )
-                txtsz= 5+ int( np.sqrt( abs(np.sin(elat[i]*d2rad)) )*8.0 )
+                txtsz= (1.0 + np.sqrt( abs(np.sin(elat[i]*d2rad)) ))*fsize*0.5 
                 plt.text( sxc[i], syc[i], 'r',  fontsize=txtsz,
                      horizontalalignment='center', color='r' )
                 plt.text( sxc[i], syc[i], '.',  fontsize=txtsz*2,

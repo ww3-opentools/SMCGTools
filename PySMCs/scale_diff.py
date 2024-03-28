@@ -23,7 +23,7 @@ def scale_diff( dfrng, ncstr=2, nclrm=256 ):
         print( ' Range list should have more than 2 elements!' )
         return
 
-    difrnge=np.array(dfrng, dtype=np.float32)
+    difrnge=np.array(dfrng, dtype=float)
     difextd= (difrnge[nlen-1] - difrnge[0])*0.05
     bottom = difrnge[0] - difextd 
     ceilng = difrnge[nlen-1] + difextd 

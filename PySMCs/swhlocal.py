@@ -4,7 +4,7 @@
 #;
 """
 
-def swhlocal(swhs,verts,ncels,colrs,config,
+def swhlocal(swhs,verts,ncels,colrs,config, fsize=12.0,
         mdlname='SMC',datx='2018',psfile='output.ps', 
         paprorn='portrait', paprtyp='a3'):
 
@@ -43,6 +43,10 @@ def swhlocal(swhs,verts,ncels,colrs,config,
 #   print ' nswh0 and marks = ', nswh0, marks
 #   print ' factor, residu, resmn1 = %f, %f, %f' % (factor, residu, resmn1) 
 
+##  Alternative font sizes.
+    asize=1.25*fsize
+    bsize=1.50*fsize
+
 ##  Some constant variables for plots.
     xprop={'xlim':rngsxy[0:2], 'xlabel':''}
     yprop={'ylim':rngsxy[2:4], 'ylabel':''}
@@ -66,7 +70,7 @@ def swhlocal(swhs,verts,ncels,colrs,config,
 
 ##  Convert swhs with logarithm scale.
         icnf = ncstr+ np.rint( factor*np.log(swhs+residu) )
-        nswh = np.array( icnf, dtype=np.int16 )
+        nswh = np.array( icnf, dtype=int )
 
         print (" Drawing "+psfile)
 
@@ -110,30 +114,30 @@ def swhlocal(swhs,verts,ncels,colrs,config,
             m = marks[i]
             if( dkx < dky ): 
                 plt.text(xkeys[0]+1.15*dkx, ykeys[m], str(waveht[i]),
-                    verticalalignment='center', fontsize=11, color='b' )
+                    verticalalignment='center', fontsize=fsize, color='b' )
             else:
                 plt.text(xkeys[m], ykeys[0]+1.15*dky, str(waveht[i]),
-                    horizontalalignment='center', fontsize=11, color='b' )
+                    horizontalalignment='center', fontsize=fsize, color='b' )
 
         if( dkx < dky ):
             plt.text(xkeys[0]+2.0*dkx, ykeys[marks[3]], 'SWH m',
-                rotation=90,verticalalignment='center', fontsize=15, color='k' )
+                rotation=90,verticalalignment='center', fontsize=asize, color='k' )
         else:
             plt.text(xkeys[marks[3]], ykeys[0]+2.0*dky, 'SWH m',
-                rotation=0,horizontalalignment='center', fontsize=15, color='k' )
+                rotation=0,horizontalalignment='center', fontsize=asize, color='k' )
 
 ##  Put cell information inside plot
         tpx= sztpxy[2]
         tpy= sztpxy[3]
         dpy= 0.6
         plt.text(tpx, tpy-dpy*1., mdlname, 
-             horizontalalignment='center', fontsize=17, color='g' )
+             horizontalalignment='center', fontsize=bsize, color='g' )
         plt.text(tpx, tpy-dpy*2., datx,
-             horizontalalignment='center', fontsize=15, color='k' )
+             horizontalalignment='center', fontsize=asize, color='k' )
         plt.text(tpx, tpy-dpy*3., cmxs,
-             horizontalalignment='center', fontsize=13, color='r' )
+             horizontalalignment='center', fontsize=fsize, color='r' )
         plt.text(tpx, tpy-dpy*4., cmns,
-             horizontalalignment='center', fontsize=13, color='b' )
+             horizontalalignment='center', fontsize=fsize, color='b' )
 
 ##  Refresh subplots and save them.
         plt.savefig(psfile, dpi=None,facecolor='w',edgecolor='w', 

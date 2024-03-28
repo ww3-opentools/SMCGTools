@@ -47,7 +47,7 @@ def smcupalevel(cell_file, skiprows=0 ):
 
 ##  Read cells with s by a procedure
     cels = np.genfromtxt(cellfile, skip_header=skiprows)
-    cel  = np.array( cels ).astype(np.int32)
+    cel  = np.array( cels ).astype(int)
     ncs  = cel.shape[0]
     print(" Total number of cells =", ncs)
 

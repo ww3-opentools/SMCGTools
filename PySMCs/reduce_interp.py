@@ -327,7 +327,7 @@ def interpdepthobstr(hiresfile, dx=0.5, dy=0.5, depthmin=0.0, cutout=None, workd
         offsx = int( round( (cutout[0]-x0lon)/dlon ))
         offsy = int( round( (cutout[1]-y0lat)/dlat ))
 
-#  set the output arrays for interpoalted grid,
+#  set the output arrays for interpolated grid,
 #  assuming cutput values are at edge cell centre.
     newy = int((yl-y0)/dy+1.001)
     newx = int((xl-x0)/dx+1.001)
@@ -409,8 +409,9 @@ def interpdepthobstr(hiresfile, dx=0.5, dy=0.5, depthmin=0.0, cutout=None, workd
     dh.close()
  
 ##  Remove thin river points and straighten coastlines.  JGLi03Feb2023
-    print (" Removing isolated river points or straightening coastline ... ")
-    depout = remove_river(latout, lonout, depout, depmin=0.0)
+##  Suspended for global tsunami model grid.   JGLi21Nov2023
+#   print (" Removing isolated river points or straightening coastline ... ")
+#   depout = remove_river(latout, lonout, depout, depmin=0.0)
 
     # write out data to a new netCDF file
     outfile = workdir+'Bathy_interpolated_' + datetime.now().strftime('%F_%H%M') + '.nc'

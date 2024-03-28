@@ -36,8 +36,9 @@ def smcfulgrd(ax, cel, verts, ncels, colrs, config, Arctic=False,
     rngsxy=config[2]
     clrbxy=config[3]
 ##  Local or sub-grid cell number if defined.
-    if( len(config) >4 ):
-        Arctic=True 
+    npl = 2
+    if( len(config) >4 and Arctic ):
+#       Arctic=True 
         ncabgm=config[4]
         na=int(ncabgm[0])
         nb=int(ncabgm[1])
@@ -63,14 +64,18 @@ def smcfulgrd(ax, cel, verts, ncels, colrs, config, Arctic=False,
 ##  Use only first 131 colors in colrs(0:255). 
     depth, factr, cstar, marks, ncstr, nclrm = scale_depth(nclrm=136)
 
+##  Alternative font sizes.
+    fontsa=1.25*fontsz
+    fontsb=1.50*fontsz
+
 ##  Cell color is decided by its depth value.
-    ndeps = np.zeros( (nc), dtype=np.int )
+    ndeps = np.zeros( (nc), dtype=int )
     for j in range(nc):
         if( cel[j,4] > -11 ): 
-            ndeps[j] = ncstr + np.rint( (cstar-np.log10(cel[j,4]+11))*factr ).astype(np.int)
-#   ndeps = ncstr + np.rint( (cstar-np.log10(cel[:,4]))*factr ).astype(np.int)
+            ndeps[j] = ncstr + np.rint( (cstar-np.log10(cel[j,4]+11))*factr ).astype(int)
+#   ndeps = ncstr + np.rint( (cstar-np.log10(cel[:,4]))*factr ).astype(int)
 ##  Sea level index
-    ndep0 = ncstr + np.rint( (cstar-np.log10(11))*factr ).astype(np.int)
+    ndep0 = ncstr + np.rint( (cstar-np.log10(11))*factr ).astype(int)
     print( " Sea level depth index is ", ndep0)
 
 ##  Use selected cells to draw the plot.
@@ -137,10 +142,10 @@ def smcfulgrd(ax, cel, verts, ncels, colrs, config, Arctic=False,
 
     if( dkx < dky ):    
         ax.text(xkeys[0]+1.2*dkx, (ykeys[marks[2]]+ykeys[marks[1]])*0.5, 'Depth m',
-                 rotation=-90,verticalalignment='center', fontsize=fontsz+2, color='k' )
+                 rotation=-90,verticalalignment='center', fontsize=fontsa, color='k' )
     else:
         ax.text((xkeys[marks[1]]+xkeys[marks[2]])*0.5, ykeys[0]+1.2*dky, 'Depth m',
-                 rotation=0,horizontalalignment='center', fontsize=fontsz+2, color='k' )
+                 rotation=0,horizontalalignment='center', fontsize=fontsa, color='k' )
 
 ##  Put cell information inside plot
     tpx=sztpxy[2] 
@@ -148,37 +153,37 @@ def smcfulgrd(ax, cel, verts, ncels, colrs, config, Arctic=False,
     dpy=0.6 
 
     ax.text(tpx,-tpy-dpy*1.5, panel,
-             horizontalalignment='left', fontsize=fontsz+4, color='k' )
+             horizontalalignment='left', fontsize=fontsb, color='k' )
 
     ax.text(tpx, tpy+dpy*0, grid+' Grid',  
-             horizontalalignment='left', fontsize=fontsz+4, color='k' )
+             horizontalalignment='left', fontsize=fontsb, color='k' )
     ax.text(tpx, tpy+dpy*1.5, 'NC='+str(nc), 
-             horizontalalignment='left', fontsize=fontsz+2, color='r' )
+             horizontalalignment='left', fontsize=fontsa, color='r' )
     ax.text(tpx, tpy+dpy*2.5, 'NPol='+str(npl), 
-             horizontalalignment='left', fontsize=fontsz+2, color='r' )
+             horizontalalignment='left', fontsize=fontsa, color='r' )
 
     ax.text(-tpx,-tpy-dpy*1.5, ritop,
-             horizontalalignment='right', fontsize=fontsz+4, color='k' )
+             horizontalalignment='right', fontsize=fontsb, color='k' )
 
     ax.text(-tpx, tpy+dpy*0, 'Projection Pole',  
-             horizontalalignment='right', fontsize=fontsz+4, color='k' )
+             horizontalalignment='right', fontsize=fontsb, color='k' )
     ax.text(-tpx, tpy+dpy*1.5, f'PLon={plon:8.2f}', 
-             horizontalalignment='right', fontsize=fontsz+2, color='r' )
+             horizontalalignment='right', fontsize=fontsa, color='r' )
     ax.text(-tpx, tpy+dpy*2.5, f'PLat={plat:7.2f}', 
-             horizontalalignment='right', fontsize=fontsz+2, color='r' )
+             horizontalalignment='right', fontsize=fontsa, color='r' )
     if( Arctic ):
         ax.text( tpx, tpy+dpy*3.5, 'NA='+str(na), 
-             horizontalalignment='left', fontsize=fontsz+2, color='r' )
+             horizontalalignment='left', fontsize=fontsa, color='r' )
         ax.text(-tpx, tpy+dpy*3.5, 'NB='+str(nb), 
-             horizontalalignment='right', fontsize=fontsz+2, color='r' )
+             horizontalalignment='right', fontsize=fontsa, color='r' )
 
 #;  Overlay buoy sits on grid map if buoy file is provided.
     if( len(buoys) > 3 ):
         hdr, buoyll = readtext(buoys)
         nmbu=int(hdr[0])
         buoyids=buoyll[:,0].astype(str)
-        buoylat=buoyll[:,1].astype(np.float)
-        buoylon=buoyll[:,2].astype(np.float)
+        buoylat=buoyll[:,1].astype(float)
+        buoylon=buoyll[:,2].astype(float)
 
 #; Convert slat slon to elat elon with given new pole
         elat,elon,sxc,syc = steromap(buoylat,buoylon,plat,plon,Pangl=pangle)
@@ -189,7 +194,7 @@ def smcfulgrd(ax, cel, verts, ncels, colrs, config, Arctic=False,
             if( (elat[i] >= 25.0) and (rngsxy[0] < sxc[i] < rngsxy[1])
                               and (rngsxy[2] < syc[i] < rngsxy[3]) ):
                 print (' {:6} {:8.3f} {:8.3f}'.format( buoyids[i], buoylat[i], buoylon[i] ))
-                txtsz=int( abs(np.sin(elat[i]*d2rad)*12.0) )
+                txtsz= 2.0 + abs(np.sin(elat[i]*d2rad)*fontsz) 
                 ax.text(sxc[i], syc[i], 'r',  fontsize=txtsz,
                      horizontalalignment='center', color='r' )
                 ax.text(sxc[i], syc[i], '.',  fontsize=txtsz*2,

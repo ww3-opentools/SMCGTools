@@ -249,7 +249,7 @@ def main():
 
 ##  Read sub-grid boundary cell lists.
         BCels = []
-        NBdys = np.zeros((3), dtype=np.int)
+        NBdys = np.zeros((3), dtype=int)
         for k in range(3):
             Bndyfile = DatSub+Subs[k]+'61250Bdys.dat'
             headrs, bcel = readcell( [Bndyfile] ) 
