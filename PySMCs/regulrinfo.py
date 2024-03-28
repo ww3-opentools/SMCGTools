@@ -2,7 +2,7 @@
 #; Procedure to setup regular grid parameters for a SMC grid.
 ## Converted from IDL to Python.  JGLi26Feb2019
 #; First created:   25 Feb 2015   Jian-Guo Li
-#; Last modified:   08 Dec 2022   Jian-Guo Li
+#; Last modified:   18 Jul 2023   Jian-Guo Li
 ##
 """
 
@@ -33,15 +33,17 @@ def regulrinfo( Model, zdlonlat, NLvLonLat, FLon=0.0, FLat=-80.0, **kwargs ):
         Global = True
         print(" Global grid periodic condition applied.")
 
-#;; Use input FLon and FLat to adjust starting points. 
-    JEqut= MFct*int(round( (zlat - FLat)/(dlat*MFct) ))
-    IShft= MFct*int(round( (zlon - FLon)/(dlon*MFct) ))
-
-##  Adjust FLon and FLat to be centre of a base resolution cell.
-    FLonR= zlon - IShft*dlon + dlon*MFct/2 
-    FLatR= zlat - JEqut*dlat + dlat*MFct/2
+##  Regular grid increments by MFct.
     DLonR= dlon*MFct
     DLatR= dlat*MFct
+
+#;; Use input FLon and FLat to adjust starting points. 
+    JEqut= MFct*int(round( (zlat - FLat)/DLatR ))
+    IShft= MFct*int(round( (zlon - FLon)/DLonR ))
+
+##  Adjust FLon and FLat to be centre of a base resolution cell.
+    FLonR= zlon - IShft*dlon + DLonR*0.5 
+    FLatR= zlat - JEqut*dlat + DLatR*0.5
 
 ##  Work out number of regular grid column and row numbers.
     NCol = NLon//MFct

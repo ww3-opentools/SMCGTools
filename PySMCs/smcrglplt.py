@@ -25,6 +25,10 @@ def smcrglplt(ax, hgts, swhs, verts, ncels, colrs, config,
 ##  Degree to radian conversion parameter.
     d2rad=np.pi/180.0
 
+##  Alternative font sizes.
+    fontsa=1.25*fontsz
+    fontsb=1.50*fontsz
+
 ##  Total cell number by cell array
     nc = swhs.shape[0]
 
@@ -51,14 +55,7 @@ def smcrglplt(ax, hgts, swhs, verts, ncels, colrs, config,
     hgts0= float(hgts[0])
     swhmn= -ncstr/factor + hgts0
     swhmx= float(hgts[-1])
-
-##  Work out max and min values, excluding missing data (-999.0)
-    cmax = swhs.max()
-    cmin = swhs[ swhs > -999.0 ].min()
-    print ( ' swhs range %f, %f' % ( cmin,  cmax) )
     print ( ' Draw range %f, %f' % (swhmn, swhmx) )
-    cmxs = ', Hmax=%6.3f' % cmax
-    cmns = ', Hmin=%7.4f' % cmin
 
 ##  Reset missing values (-999.0) or any value < swhmn to be swhmn 
     swhs[ swhs < swhmn ] = swhmn
@@ -80,8 +77,10 @@ def smcrglplt(ax, hgts, swhs, verts, ncels, colrs, config,
 ##  Work out ticks at 30 degree interval.
     x0=int(rngsxy[0]/30.0); xn=int( (rngsxy[1]-rngsxy[0])/30.0 )
     ax.set_xticks( (np.arange(min([13,xn+1]))+x0)*30 )
+    ax.tick_params(axis='x', labelsize=fontsz )
     y0=int(rngsxy[2]/30.0); yn=int( (rngsxy[3]-rngsxy[2])/30.0 )
     ax.set_yticks( (np.arange(min([7,yn+1]))+y0)*30 )
+    ax.tick_params(axis='y', labelsize=fontsz )
 #   ax.set_aspect('equal')
     ax.set_autoscale_on(False)
 #   ax.set_axis_off()
@@ -122,10 +121,10 @@ def smcrglplt(ax, hgts, swhs, verts, ncels, colrs, config,
 
     if( dkx < dky ):    
         ax.text(xkeys[0]+1.2*dkx, (ykeys[marks[2]]+ykeys[marks[1]])*0.5, 'H '+Hunit,
-                 rotation=-90,verticalalignment='center', fontsize=fontsz+2, color='k' )
+                 rotation=-90,verticalalignment='center', fontsize=fontsa, color='k' )
     else:
         ax.text((xkeys[marks[1]]+xkeys[marks[2]])*0.5, ykeys[0]+1.2*dky, 'H '+Hunit,
-                 rotation=0,horizontalalignment='center', fontsize=fontsz+2, color='k' )
+                 rotation=0,horizontalalignment='center', fontsize=fontsa, color='k' )
 
 ##  Put vorticity information on top of the regular plot
 #   tpx=sztpxy[2] 
@@ -134,8 +133,9 @@ def smcrglplt(ax, hgts, swhs, verts, ncels, colrs, config,
     tpx=(rngsxy[1] - rngsxy[0])*0.5
     tpy=rngsxy[2]+1.0
 
-    ax.text(tpx,tpy, panel+datx+cmns+cmxs+Hunit,
-             horizontalalignment='center', fontsize=fontsz+4, color='k' )
+#   ax.text(tpx,tpy, panel+grid+datx+cmns+cmxs+Hunit,
+    ax.text(tpx,tpy, panel+grid+datx+Hunit,
+             horizontalalignment='center', fontsize=fontsb, color='k' )
 
 #   ax.text(tpx,-tpy-dpy*1.5, panel,
 #            horizontalalignment='left', fontsize=fontsz+4, color='k' )

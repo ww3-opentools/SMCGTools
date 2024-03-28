@@ -11,6 +11,7 @@
 ##  Modified to generate Caspian Sea 2.5-5-10-20 km grid.  JGLi28Feb2023
 ##  Modified to generate Caspian Lake Superior 3-7-13-25 km grid.  JGLi22Mar2023
 ##  Modified to generate Caspian Lake Superior 6-12-25 km grid.  JGLi28Apr2023
+##  Updated to use water level parameter instead of depmin.  JGLi10Nov2023
 ##
 """
 
@@ -25,7 +26,7 @@ def main():
     Wrkdir='../tmpfls/'
     bathyf='../Bathys/Bathy088_059deg.nc'
     Global= False
-    Arctic= False
+#   Arctic= False   ## defaul value.
 
 ##  Open and read bathymetry data.
     datas = nc.Dataset(bathyf)
@@ -91,21 +92,25 @@ def main():
     for grd in range(len(GridNames)):
         GridNm=GridNames[grd]+'6125'
         Ranges=LakeRange[grd]
-        depmin=Lowaterlv[grd]
-##  Note depmin defines water surface altitude (normally sea level 0.0)
+        wlevel=Lowaterlv[grd]
+##  Note wlevel defines water surface altitude (normally sea level 0.0) 
 ##  and non-zero values are used to define lake surfaces differ from sea level.
-##  dshalw defines shallow water altitude and is used to refine shallow ater area
-##  so setting dshalw equal to depmin makes all area below depmin to be deep water.
-##  Define dshalw = depmin - 60.0 will refine areas less than 60 m below depmin.
-        dshalw=depmin
+##  The depmin defines the minimum elavation the model domain should cover and 
+##  it will be reset equal to wlevel if it is given a value lower than wlevel.  
+##  For any dry cells to be included, depmin should be greater than wlevel.  The
+##  dshalw defines shallow water altitude and is used to refine shallow water area
+##  so setting dshalw equal to wlevel makes all area below wlevel to be deep water.
+##  Define dshalw = wlevel - 60.0 will refine areas less than 60 m below wlevel.
+        dshalw=wlevel
+        depmin=wlevel
  
-        print( GridNm+" range and water level =", Ranges, depmin  ) 
+        print( GridNm+" range and water level =", Ranges, wlevel  ) 
 
 ##  Merte lake range with mlvlxy0 array. 
         mlvlxy0 = [ NLvl, x0lon, y0lat ] + Ranges 
 
         smcellgen(Bathy, ndzlonlat, mlvlxy0, FileNm=Wrkdir+GridNm, 
-            Global=Global, Arctic=Arctic, depmin=depmin, dshalw=dshalw) 
+            Global=Global, depmin=depmin, dshalw=dshalw, wlevel=wlevel) 
     
         print( "GridNm cells saved in ", Wrkdir+GridNm+'cels.dat')
 

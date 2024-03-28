@@ -2,7 +2,7 @@
 Two functions are defined here: one to calculate the cell centre
 longitude and latitude from a given list of cell IDs; and another 
 to map a list of longitude and latitude points with SMC cell IDs. 
-Use input x0, y0, dlon, dlat and cell array for cell locating.
+Use input zlon, zlat, dlon, dlat and cell array for cell locating.
 Return the cell id number if any point is within the cell are.  
 Unmatched points are marked by 0 cell numbers. 
 
@@ -21,7 +21,7 @@ called as stand alone functions.
 def smcell(idlst, cel, zdlnlt):
     """  
     Calculate cell centre longitude and latitude for a given list of cell IDs. 
-    Unmatched cell ids get x0, y0 (ids<0) or dlon, dlat (ids>=ncel).
+    Unmatched cell ids get zlon, zlat (ids<0 or ids>=ncel).
     """
 
     import numpy  as np
@@ -29,14 +29,14 @@ def smcell(idlst, cel, zdlnlt):
 ##  Check idlst and initialise xlon ylat arrays.
     if( len(idlst) > 0 ):
         mt = len(idlst)
-        xlon = np.zeros( (mt), dtype=np.float )
-        ylat = np.zeros( (mt), dtype=np.float )
+        xlon = np.zeros( (mt), dtype=float )
+        ylat = np.zeros( (mt), dtype=float )
 
     else:
         print (" Empty list, exiting ... ")
         return  0.0, 0.0
 
-##  Extract x0, y0, dlon, dlat
+##  Extract zlon, zlat, dlon, dlat
     zlon = zdlnlt[0]; zlat = zdlnlt[1]
     dlon = zdlnlt[2]; dlat = zdlnlt[3]
     print (" zlon, zlat, dlon, dlat =", zlon, zlat, dlon, dlat)
@@ -72,7 +72,7 @@ def smcmap(xlon, ylat, cel, zdlnlt):
 ##  Check input lon-lat list. 
     nx = len(xlon); ny = len(ylat)
     if( nx == ny > 0 ):
-        idlst = np.zeros( (nx), dtype=np.int ) -1
+        idlst = np.zeros( (nx), dtype=int ) -1
 
     else:
         print (" Empty lon-lats, exiting ... ")
@@ -83,15 +83,15 @@ def smcmap(xlon, ylat, cel, zdlnlt):
     dlon = zdlnlt[2]; dlat = zdlnlt[3]
     print (" zlon, zlat, dlon, dlat =", zlon, zlat, dlon, dlat)
     
-##  Convert xlon to ensure xlon >= x0
-    xlow = np.where( xlon < x0, xlon+360.0, xlon )
+##  Convert xlon to ensure xlon >= zlon
+    xlow = np.where( xlon < zlon, xlon+360.0, xlon )
 
 ##  Work out cell range by given cel array
     ncel = cel.shape[0]
 
 ##  Convert x, y into cell indexes
-    ixlw = np.floor( (xlow-zlon)/dlon ).astype(np.int)
-    jylt = np.floor( (ylat-zlat)/dlat ).astype(np.int)
+    ixlw = np.floor( (xlow-zlon)/dlon ).astype(int)
+    jylt = np.floor( (ylat-zlat)/dlat ).astype(int)
 
 ##  Show coversion results.
 #   print("\n Converted i,j and xlow, ylat:")
@@ -127,38 +127,67 @@ def smcmap(xlon, ylat, cel, zdlnlt):
     return idlst 
 
 ##
-def smcids(idcel, cel):
+def smcids(idcel, cel, nids=[]):
     """  
     Find cell ids for all cells in idcel from the full cell array cel. 
-    Unmatched cells are asigned ids to be 0. 
+    Unmatched cells are asigned ids to be -1. 
     """
 
     import numpy  as np
+    from datetime import datetime
 
 ##  Check idcel to be unempty.
-    nids = idcel.shape[0]
-    if( nids < 1 ):
+    kids = idcel.shape[0]
+    if( kids < 1 ):
         print (" Empty id cell list, exiting ... ")
         return  [-1] 
     else:
-        idlst = np.zeros( (nids), dtype=np.int ) -1
+        idlst = np.zeros( (kids), dtype=int ) -1
 
 ##  Work out cell range by given cel array
     ncel = cel.shape[0]
 
+##  Create an index array to speed up loop.
+#   nids = list(range(ncel))
+
 ##  Loop over all idcel and work out their cell ids, if found.
     im = 0
-    for k in range(nids):
-        ix = idcel[k,0]; jy = idcel[k,1]
-        for n in range(ncel):
-            if( ix == cel[n,0] and jy == cel[n,1] ):
-                if( idcel[k,2] == cel[n,2] and idcel[k,3] == cel[n,3] ):
-                    idlst[k] = n
-                    im += 1
-                    break
+    km = 0
+    print( " Matching loop started at ", datetime.now().strftime('%F %H:%M:%S') )
+    if( len(nids) > 0 ):
+##  Use id list reduction to speed up matching.
+        for k in range(kids):
+            ix = idcel[k,0]; jy = idcel[k,1]
+            for m in range(len(nids)):
+                n = nids[m]
+                if( ix == cel[n,0] and jy == cel[n,1] ):
+                    if( idcel[k,2] == cel[n,2] and idcel[k,3] == cel[n,3] ):
+                        idlst[k] = n
+                        im += 1
+    ##  Remove the matched cell out of next loop to speed it up.
+                        nids.remove(n)
+                        break
+            if( im % 1000 == 0 and im > km): 
+                km +=1000
+                print(" Matched so far ", im, datetime.now().strftime('%H:%M:%S') )
 
-    print(" Matched number of cells:", im )
+    else:
+##  Full loop over main cell array for each matching cell.
+        for k in range(kids):
+            ix = idcel[k,0]; jy = idcel[k,1]
+            for n in range(ncel):
+                if( ix == cel[n,0] and jy == cel[n,1] ):
+                    if( idcel[k,2] == cel[n,2] and idcel[k,3] == cel[n,3] ):
+                        idlst[k] = n
+                        im += 1
+                        break
+            if( im % 1000 == 0 and im > km): 
+                km +=1000
+                print(" Matched so far ", im, datetime.now().strftime('%H:%M:%S') )
 
+    print( " Matching loop finished at ", datetime.now().strftime('%F %H:%M:%S') )
+
+##  All done, return matched cell ids.
     return  idlst 
 
 
@@ -167,8 +196,9 @@ def main():
     import numpy  as np
     from readcell import readcell   
 
-    DatGMC='../DatGMC/'
-    Wrkdir='../tmpfls/'
+    DatGMC='/data/users/frjl/MFTModel/SMC61250/DatGMC/'
+    Wrkdir='/data/users/frjl/MFTModel/SMC61250/'
+    MyCode='/home/h05/frjl/Python/MyCodes/'
     SMC_file = DatGMC+'SMC61250Cels.dat'
     Arc_file = DatGMC+'SMC61250BArc.dat'
   
@@ -177,11 +207,11 @@ def main():
     na = int( headrs[1].split()[0] )
     nc = na + ng
 
-    x0 = 0.0; y0 = 0.0
+    zlon = 0.0; zlat = 0.0
     dxlon=0.0439453125*2.0
     dylat=0.029296875*2.0
 
-    zdlnlt = [x0, y0, dxlon, dylat]
+    zdlnlt = [zlon, zlat, dxlon, dylat]
 
     idlst = [-1, 0, 10, ng-1, nc-1, nc]
 

@@ -15,10 +15,10 @@ def scale_swh( ncstr=0, nclrm=256 ):
 
     import numpy as np
 
-    waveht=np.array([0,1,2,4,8,16,32], dtype=np.int)
+    waveht=np.array([0,1,2,4,8,16,32], dtype=int)
     factor=(nclrm - 2)/np.log(35.0)
     residu=np.exp(5.0/factor)
-    marks=ncstr + np.rint( factor*np.log(waveht+residu) ).astype(np.int)
+    marks=ncstr + np.rint( factor*np.log(waveht+residu) ).astype(int)
     print( ncstr, nclrm, ' colors with waveheight marks at ', waveht[:] )
 
     return ( waveht, factor, residu, marks, ncstr, nclrm )

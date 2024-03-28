@@ -1,16 +1,16 @@
 """
 ##  Draw global swh plot with given polycollections and cell
-##  array. Output as A3 ps file.        JGLi28Feb2019
+##  array. Output to pns in 2 panels.   JGLi06Oct2023
 ##
 """
 
-def swhglobl(swhs,nvrts,ncels,svrts,scels,colrs,config,fsize=12.0,
-             mdlname='SMC',datx='2018010106',psfile='output.ps'):
+def swhglob2(fig, pns, swhs,nvrts,ncels,svrts,scels,colrs,config,
+             mdlname='SMC',datx='2018010106', fsize=12.0):
 
 ##  Import relevant modules and functions
 
     import numpy as np
-    import matplotlib.pyplot as plt
+#   import matplotlib.pyplot as plt
 
     from matplotlib.collections import PolyCollection
 
@@ -47,9 +47,9 @@ def swhglobl(swhs,nvrts,ncels,svrts,scels,colrs,config,fsize=12.0,
 #   print (' factor, residu, resmn1, nswh0 = {} {} {} {: d}' 
 #    .format(factor, residu, resmn1, nswh0) ) 
 
-##  Alternative font sizes.
-    asize=1.25*fsize 
-    bsize=1.50*fsize
+##  Alternative font size
+    asize = 1.25*fsize
+    bsize = 1.50*fsize
 
 ##  Some constant variables for plots.
     xprop={'xlim':rngsxy[0:2], 'xlabel':''}
@@ -60,8 +60,8 @@ def swhglobl(swhs,nvrts,ncels,svrts,scels,colrs,config,fsize=12.0,
         cmax = swhs.max()
         cmin = swhs[ swhs > -999.0 ].min()
         print ( ' swh range %f, %f' % (cmin, cmax) )
-        cmxs = 'SWHmx = %6.2f m' % cmax
-        cmns = 'SWHmn = %10.3E' % cmin
+        cmxs = 'SWHmx ='; cmx2='%6.2f m' % cmax
+        cmns = 'SWHmn ='; cmn2='%10.3E' % cmin
 
 ##  Reset missing values (-999.0) to be -resmn1 
         swhs[ swhs < -resmn1] = -resmn1
@@ -73,15 +73,18 @@ def swhglobl(swhs,nvrts,ncels,svrts,scels,colrs,config,fsize=12.0,
         icnf = np.rint( factor*np.log(swhs+residu) )
         nswh = np.array( icnf, dtype=int )
 
-        print (" Drawing "+psfile)
+        print (" Drawing panels ...")
 ##  Set up first subplot and axis for northern hemisphere
-        fig=plt.figure(figsize=sztpxy[0:2])
-        ax1=fig.add_subplot(1,2,1)
+#       fig=plt.figure(figsize=sztpxy[0:2])
+#       ax1=fig.add_subplot(1,2,1)
+##  Set up first subplot from given panel and figure.
+#       ax1=fig.add_subplot(pns[0,0])
+        ax1=fig.add_subplot(pns[0])
         ax1.set_aspect('equal')
         ax1.set_autoscale_on(False)
         ax1.set_axis_off()
-        plt.subplots_adjust(left=0.01,bottom=0.01,right=0.99,top=0.99)
-        plt.subplots_adjust(wspace=0.01, hspace=0.01)
+#       plt.subplots_adjust(left=0.01,bottom=0.01,right=0.99,top=0.99)
+#       plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
         ax1.set(**xprop)
         ax1.set(**yprop)
@@ -109,26 +112,40 @@ def swhglobl(swhs,nvrts,ncels,svrts,scels,colrs,config,fsize=12.0,
         polynorth.set_linewidth( 0.2 )
         ax1.add_collection(polynorth)  
 
+##  Add first half text message on first panel.
+        tpx=rngsxy[1]
+        tpy=sztpxy[3]
+        dpy= 0.6 
+        ax1.text(tpx, 9.0, mdlname,  
+             horizontalalignment='right', fontsize=bsize, color='r' )
+        ax1.text(tpx, tpy+dpy*1.0, cmns,
+             horizontalalignment='right', fontsize=fsize, color='b' )
+        ax1.text(tpx, tpy+dpy*2.0, cmxs, 
+             horizontalalignment='right', fontsize=fsize, color='r' )
+        ax1.text(tpx, tpy+dpy*3.0, 'Time =',
+             horizontalalignment='right', fontsize=asize, color='k' )
+
 ##  Draw colorbar for ax1.
         xkeys, ykeys, clrply = colrboxy(clrbxy, colrs, marks)
         ax1.add_collection(clrply)
         for i in range(len(waveht)):
             m = marks[i]
-            plt.text(xkeys[m], ykeys[0]+1.18*(ykeys[1]-ykeys[0]), str(waveht[i]),
+            ax1.text(xkeys[m], ykeys[0]+1.18*(ykeys[1]-ykeys[0]), str(waveht[i]),
             horizontalalignment='center', fontsize=fsize, color='b' )
 #           rotation=-90,verticalalignment='center', fontsize=11, color='b' )
 
-        plt.text(xkeys[marks[0]], ykeys[0]+2.0*(ykeys[1]-ykeys[0]), 'SWH m',
+        ax1.text(xkeys[marks[0]], ykeys[0]+2.0*(ykeys[1]-ykeys[0]), 'SWH m',
             horizontalalignment='left', fontsize=asize, color='k' )
 #           rotation=-90,verticalalignment='center', fontsize=15, color='k' )
 
 
 ##  Southern hemisphere subplot.
-        ax2=fig.add_subplot(1,2,2)
+#       ax2=fig.add_subplot(1,2,2)
+        ax2=fig.add_subplot(pns[1])
         ax2.set_aspect('equal')
         ax2.axis('off')
-        plt.subplots_adjust(left=0.01,bottom=0.01,right=0.99,top=0.99)
-        plt.subplots_adjust(wspace=0.01, hspace=0.01)
+#       plt.subplots_adjust(left=0.01,bottom=0.01,right=0.99,top=0.99)
+#       plt.subplots_adjust(wspace=0.01, hspace=0.01)
         ax2.set(**xprop)
         ax2.set(**yprop)
 
@@ -156,41 +173,50 @@ def swhglobl(swhs,nvrts,ncels,svrts,scels,colrs,config,fsize=12.0,
 
 
 ##  Put statistic information inside subplot ax2
-        tpx=sztpxy[2] 
+#       tpx=sztpxy[2] 
+        tpx=rngsxy[0]
         tpy=sztpxy[3]
-        dpy= 0.6 
+        dpy= 0.6
+        ax2.text(tpx, 9.0, '  SWH m',
+             horizontalalignment='left', fontsize=bsize, color='r' )
+        ax2.text(tpx, tpy+dpy*1.0, cmn2,
+             horizontalalignment='left', fontsize=fsize, color='b' )
+        ax2.text(tpx, tpy+dpy*2.0, cmx2,
+             horizontalalignment='left', fontsize=fsize, color='r' )
+        ax2.text(tpx, tpy+dpy*3.0, datx,
+             horizontalalignment='left', fontsize=asize, color='k' )
 
-        plt.text(tpx, 9.0, mdlname+' SWH',  
-             horizontalalignment='center', fontsize=bsize, color='r' )
-        plt.text(tpx, tpy+dpy*1.0, cmns,
-             horizontalalignment='center', fontsize=asize, color='b' )
-        plt.text(tpx, tpy+dpy*2.0, cmxs, 
-             horizontalalignment='center', fontsize=asize, color='r' )
-        plt.text(tpx, tpy+dpy*3.0, datx,
-             horizontalalignment='center', fontsize=asize, color='k' )
+#       ax2.text(tpx, 9.0, mdlname+' SWH',  
+#            horizontalalignment='center', fontsize=19, color='r' )
+#       ax2.text(tpx, tpy+dpy*1.0, cmns,
+#            horizontalalignment='center', fontsize=15, color='b' )
+#       ax2.text(tpx, tpy+dpy*2.0, cmxs, 
+#            horizontalalignment='center', fontsize=15, color='r' )
+#       ax2.text(tpx, tpy+dpy*3.0, datx,
+#            horizontalalignment='center', fontsize=17, color='k' )
 
 ##  Draw colorbar for ax2.
         xkeys, ykeys, clrply = colrboxy(clrbxy, colrs, marks)
         ax2.add_collection(clrply)
         for i in range(len(waveht)):
             m = marks[i]
-            plt.text(xkeys[m], ykeys[0]+1.18*(ykeys[1]-ykeys[0]), str(waveht[i]),
+            ax2.text(xkeys[m], ykeys[0]+1.18*(ykeys[1]-ykeys[0]), str(waveht[i]),
                horizontalalignment='center', fontsize=fsize, color='b' )
 #              rotation=-90,verticalalignment='center', fontsize=11, color='b' )
 
-        plt.text(xkeys[marks[-1]], ykeys[0]+2.0*(ykeys[1]-ykeys[0]), 'SWH m',
+        ax2.text(xkeys[marks[-1]], ykeys[0]+2.0*(ykeys[1]-ykeys[0]), 'SWH m',
             horizontalalignment='right', fontsize=asize, color='k' )
 #           rotation=-90,verticalalignment='center', fontsize=15, color='k' )
 
 ##  Refresh subplots and save them.
-        plt.subplots_adjust(wspace=0.01, hspace=0.01)
+#       plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
-        plt.savefig(psfile, dpi=None,facecolor='w',edgecolor='w', 
-                    orientation='landscape',papertype='a3')
-
-
-        plt.close()
+#       plt.savefig(psfile, dpi=None,facecolor='w',edgecolor='w', 
+#                   orientation='landscape',papertype='a3')
 
 
-##  End of swhglobal plot.
+#       plt.close()
+
+
+##  End of swhgloba2 plot.
 

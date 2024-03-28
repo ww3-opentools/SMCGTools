@@ -6,7 +6,7 @@
 ##
 """
 
-def smclocal(cel, verts, ncels, colrs, config, Arctic=False, 
+def smclocal(cel, verts, ncels, colrs, config, Arctic=False, fsize=12.0,  
              mdlname='SMC', buoys='', psfile='output.ps', 
              paprorn='portrait', paprtyp='a3', nmark=0):
 
@@ -50,19 +50,28 @@ def smclocal(cel, verts, ncels, colrs, config, Arctic=False,
     plon  =rdpols[2]
     plat  =rdpols[3]
 
+##  Outline circle for pangle>=90.0
+    ciran=np.arange(1081)*d2rad/3.0
+    xcirc=radius*np.cos(ciran)
+    ycirc=radius*np.sin(ciran)
+
 ##  Define depth to color index conversion parameters and marks.
 ##  Use only first 131 colors in colrs(0:255). 
     depth, factr, cstar, marks, ncstr, nclrm = scale_depth(nclrm=136)
 
+##  Alternative font sizes.
+    asize=1.25*fsize
+    bsize=1.50*fsize
+
 ##  Cell color is decided by its depth value.
-    ndeps = np.zeros( (nc), dtype=np.int )
+    ndeps = np.zeros( (nc), dtype=int )
     for j in range(nc):
         if( cel[j,4] > -11 ): 
-            ndeps[j] = ncstr + np.rint( (cstar-np.log10(cel[j,4]+11))*factr ).astype(np.int)
-#   ndeps = ncstr + np.rint( (cstar-np.log10(cel[:,4]))*factr ).astype(np.int)
+            ndeps[j] = ncstr + np.rint( (cstar-np.log10(cel[j,4]+11))*factr ).astype(int)
+#   ndeps = ncstr + np.rint( (cstar-np.log10(cel[:,4]))*factr ).astype(int)
 ##  Sea level index
-    ndep0 = ncstr + np.rint( (cstar-np.log10(11))*factr ).astype(np.int)
-    print( "Sea level depth index is ", ndep0)
+    ndep0 = ncstr + np.rint( (cstar-np.log10(11))*factr ).astype(int)
+    print( " Sea level depth index is ", ndep0)
 
 ##  Use selected cells to draw the plot.
     fig=plt.figure(figsize=sztpxy[0:2])
@@ -75,6 +84,10 @@ def smclocal(cel, verts, ncels, colrs, config, Arctic=False,
     ax.set_autoscale_on(False)
     ax.set_axis_off()
     plt.subplots_adjust(left=0.0,bottom=0.0,right=1.0,top=1.0)
+
+##  Add a outline circle if pangle >= 90.0
+    if( pangle >= 90.0 ):
+        ax.plot(xcirc, ycirc, 'b-', linewidth=0.3)
 
 ##  Create color array for this plot
     pcface = []
@@ -117,17 +130,17 @@ def smclocal(cel, verts, ncels, colrs, config, Arctic=False,
         m = marks[i]
         if( dkx < dky ):    
             plt.text(xkeys[0]+1.15*dkx, ykeys[m], str(depth[i]),
-                verticalalignment='center', fontsize=11, color='b' )
+                verticalalignment='center', fontsize=fsize, color='b' )
         else:
             plt.text(xkeys[m], ykeys[0]+1.15*dky, str(depth[i]),
-                horizontalalignment='center', fontsize=11, color='b' )
+                horizontalalignment='center', fontsize=fsize, color='b' )
 
     if( dkx < dky ):    
         plt.text(xkeys[0]+1.9*dkx, ykeys[marks[2]], 'Depth m',
-                 rotation=-90,verticalalignment='center', fontsize=15, color='k' )
+                 rotation=-90,verticalalignment='center', fontsize=asize, color='k' )
     else:
         plt.text(xkeys[marks[2]], ykeys[0]+1.9*dky, 'Depth m',
-                 rotation=0,horizontalalignment='center', fontsize=15, color='k' )
+                 rotation=0,horizontalalignment='center', fontsize=asize, color='k' )
 
 ##  Put cell information inside plot
     tpx=sztpxy[2] 
@@ -135,22 +148,26 @@ def smclocal(cel, verts, ncels, colrs, config, Arctic=False,
     dpy=-0.6 
 
     plt.text(tpx, tpy+dpy*1, mdlname+' Grid',  
-             horizontalalignment='center', fontsize=15, color='k' )
+             horizontalalignment='center', fontsize=bsize, color='k' )
     plt.text(tpx, tpy+dpy*2, 'NC='+str(ncgrd), 
-             horizontalalignment='center', fontsize=13, color='r' )
+             horizontalalignment='center', fontsize=asize, color='r' )
+    if( nmark > 0 ):
+        plt.text(tpx, tpy+dpy*3, 'NM='+str(nmark), 
+             horizontalalignment='center', fontsize=fsize, color='r' )
+        tpy = tpy + dpy
     if( Arctic ):
         plt.text(tpx, tpy+dpy*3, 'NA='+str(na), 
-             horizontalalignment='center', fontsize=13, color='r' )
+             horizontalalignment='center', fontsize=fsize, color='r' )
         plt.text(tpx, tpy+dpy*4, 'NB='+str(nb), 
-             horizontalalignment='center', fontsize=13, color='r' )
+             horizontalalignment='center', fontsize=fsize, color='r' )
 
 #;  Overlay buoy sits on grid map if buoy file is provided.
     if( len(buoys) > 3 ):
         hdr, buoyll = readtext(buoys)
         nmbu=int(hdr[0])
         buoyids=buoyll[:,0].astype(str)
-        buoylat=buoyll[:,1].astype(np.float)
-        buoylon=buoyll[:,2].astype(np.float)
+        buoylat=buoyll[:,1].astype(float)
+        buoylon=buoyll[:,2].astype(float)
 
 #; Convert slat slon to elat elon with given new pole
         elat,elon,sxc,syc = steromap(buoylat,buoylon,plat,plon,Pangl=pangle)
@@ -161,7 +178,7 @@ def smclocal(cel, verts, ncels, colrs, config, Arctic=False,
             if( (elat[i] >= 25.0) and (rngsxy[0] < sxc[i] < rngsxy[1])
                               and (rngsxy[2] < syc[i] < rngsxy[3]) ):
                 print (' {:6} {:8.3f} {:8.3f}'.format( buoyids[i], buoylat[i], buoylon[i] ))
-                txtsz=int( abs(np.sin(elat[i]*d2rad)*12.0) )
+                txtsz= abs(np.sin(elat[i]*d2rad))*fsize 
                 plt.text(sxc[i], syc[i], 'r',  fontsize=txtsz,
                      horizontalalignment='center', color='r' )
                 plt.text(sxc[i], syc[i], '.',  fontsize=txtsz*2,

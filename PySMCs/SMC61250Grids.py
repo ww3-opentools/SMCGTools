@@ -24,6 +24,7 @@
 ##  Updated to Python 3.6.8 GCC 7.3.0.    JGLi02Apr2019
 ##  Modified for updated SMC61250 grid.   JGLi18May2021
 ##  Modified for SMCGTools package.       JGLi06Oct2021
+##  Add Hemisphere option for document.   JGLi26Oct2023
 ##
 """
 
@@ -87,7 +88,7 @@ def main():
     radius=10.0
 
 ##  Possible selection of your plot types. 
-    gorloc={0:'Global',1:'EuroArc',2:'Pacific'}
+    gorloc={0:'Global',1:'EuroArc',2:'Pacific',3:'Hemisphere'}
 
 ##  Prompt selection choices and ask for one input
     print (" \n ", gorloc)
@@ -108,6 +109,7 @@ def main():
         clrbxy=[ -9.6,-12.0, 19.0,  1.0]
         sztpxy=[ 16.0,  9.0,-10.2,-10.3]
         rngsxy=[-10.0, 10.0,-12.1, 10.0]
+        papror='landscape'
         from smcglobl import smcglobl
 
     if( pltype == 'EuroArc'):
@@ -129,6 +131,18 @@ def main():
         sztpxy=[ 15.0, 10.0, -10.0,  7.0]
         rngsxy=[-15.0, 15.0, -10.0, 10.0]
         papror='landscape'
+
+    if( pltype == 'Hemisphere'):
+##  Whole global projection angle from N Pole to be 90.0
+        pangle=90.0
+        plon= 0.0 
+        plat= 23.5 
+        clrbxy=[ -9.6,-12.0, 19.0,  1.0]
+        sztpxy=[ 8.0,  9.0, -10.0,-10.1]
+        rngsxy=[-10.1, 10.1,-12.1, 10.1]
+        papror='portrait'
+        ngabjm = [na, nb, nb, 1]
+        from smcfulgrd import smcfulgrd
 
     print( " Start loop over cells at %s " % datetime.now().strftime('%F %H:%M:%S') )
 
@@ -158,6 +172,7 @@ def main():
 
 ##  Draw your selected grid plot.
     psfile=Wrkdir+'tmpfls/smc61250grd'+pltype[0:4]+'.ps' 
+    epsfile=Wrkdir+'tmpfls/smc61250grd'+pltype[0:4]+'.eps' 
     bufile=Wrkdir+'Bathys/ECBuoys.dat'
 
     if( pltype == 'Global'):
@@ -165,10 +180,37 @@ def main():
         smcglobl( cel, nvrts,ncels,svrts,scels,colrs, config,
              mdlname='SMC61250', buoys=buspct, psfile=psfile)
 
+    elif( pltype == 'Hemisphere'):
+        fig=plt.figure(figsize=sztpxy[0:2])
+        ax1=fig.add_subplot(1,1,1)
+
+        smcfulgrd(ax1, cel, nvrts,ncels,colrs,config, Arctic=Arctic, 
+              grid='SMC61250', fontsz=10.0, nmark=nsmrk[0]) 
+        
+        epsfile=Wrkdir+'tmpfls/smc61250grN'+pltype[0:4]+'.eps' 
+        plt.subplots_adjust(left=0.0,bottom=0.0,right=1.0,top=1.0)
+        plt.savefig(epsfile, dpi=None,facecolor='w',edgecolor='w', \
+                    orientation=papror)
+
+        plt.close()
+
+        fig=plt.figure(figsize=sztpxy[0:2])
+        ax2=fig.add_subplot(1,1,1)
+
+        smcfulgrd(ax2, cel, svrts,scels,colrs,config, Arctic=False, 
+              grid='SMC61250', fontsz=10.0, nmark=nsmrk[1]) 
+        
+        epsfile=Wrkdir+'tmpfls/smc61250grS'+pltype[0:4]+'.eps' 
+        plt.subplots_adjust(left=0.0,bottom=0.0,right=1.0,top=1.0)
+        plt.savefig(epsfile, dpi=None,facecolor='w',edgecolor='w', \
+                    orientation=papror)
+
+        plt.close()
+
     else:
         from smclocal import smclocal
         smclocal( cel, nvrts,ncels,colrs,config, Arctic=Arctic, 
-              mdlname='SMC61250', buoys=bufile, psfile=psfile,
+              mdlname='SMC61250', buoys=bufile, psfile=epsfile,
               paprorn=papror)
 
     print( " Program finished at %s " % datetime.now().strftime('%F %H:%M:%S') )

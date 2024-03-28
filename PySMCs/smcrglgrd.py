@@ -55,10 +55,10 @@ def smcrglgrd(ax, cel, verts, ncels, colrs, config,
     ndeps = np.zeros( (nc), dtype=int )
     for j in range(nc):
         if( cel[j,4] > -11 ): 
-            ndeps[j] = ncstr + np.rint( (cstar-np.log10(cel[j,4]+11))*factr ).astype(np.int)
-#   ndeps = ncstr + np.rint( (cstar-np.log10(cel[:,4]))*factr ).astype(np.int)
+            ndeps[j] = ncstr + np.rint( (cstar-np.log10(cel[j,4]+11))*factr ).astype(int)
+#   ndeps = ncstr + np.rint( (cstar-np.log10(cel[:,4]))*factr ).astype(int)
 ##  Sea level index
-    ndep0 = ncstr + np.rint( (cstar-np.log10(11))*factr ).astype(np.int)
+    ndep0 = ncstr + np.rint( (cstar-np.log10(11))*factr ).astype(int)
     print( " Sea level depth index is ", ndep0)
 
 ##  Use selected cells to draw the plot.

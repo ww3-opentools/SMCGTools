@@ -131,7 +131,7 @@ def main( ):
 
 #;; Read in cell concentration data files from a list file
     hdr, cnfiles = readtext(OutDat+'cfiles.txt')
-    cfiles = cnfiles.astype(np.str).reshape(len(cnfiles))
+    cfiles = cnfiles.astype(str).reshape(len(cnfiles))
 
 ##  loop over available files 
 #   for nn in range(0,len(cnfiles),2):

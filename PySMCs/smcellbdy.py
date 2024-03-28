@@ -10,6 +10,7 @@
 ## Adding shallow water refinement up to NLvl-1 level.  JGLi16Dec2022
 ## Use bathy difference from depmin to define water depth.  JGLi28Feb2023
 ## Add GlbArcLat keyward for Arctic part lower boundary latitude. JGLi28Apr2023
+## Create boundary cells for regional bathymetry.  JGLi07Jul2023
 ## Add water level parameter to define dry cells.  JGLi02Nov2023
 ##
 """
@@ -28,44 +29,39 @@ def main():
 
 ##  Import relevant modules and functions
     import numpy   as np
+    import pandas  as pd
     import netCDF4 as nc
+    from datetime import datetime
 
-    Wrkdir='./'
-    bathyf='../Bathy/Bathy035_025deg.nc' 
-    Global= True
-    Arctic= True
-    GridNm='SMC251040'
+    Wrkdir='../Bathys/'
+    bathyf='Amm15Bathy.nc' 
+    Global= False
+    Arctic= False
+    GridNm='AMM153km'
 
 ##  Open and read bathymetry data.
     datas = nc.Dataset(bathyf)
 
     print(datas)            ## Print information about the dataset.
 
-    print(datas.__dict__)
-
-    print(datas.__dict__['description'])
-
-    for var in datas.dimensions.values(): print(var)
-
     nlat = datas.dimensions['lat'].size
     nlon = datas.dimensions['lon'].size
-    dlat = 180.0 / float(nlat)
-    dlon = 360.0 / float(nlon)
+    zlat = -7.2942; zlon = -10.8895  
+    dlat =  0.0135; dlon = 0.0135
+    ylat = zlat + np.arange(nlat)*dlat
+    xlon = zlon + np.arange(nlon)*dlon
 
     print(" nlat, nlon, dlat, dlon =", nlat, nlon, dlat, dlon )
+    print(" Grid range x0, y0, xn, yn =",xlon[0],ylat[0],xlon[-1],ylat[-1] )
 
-    xlon = datas.variables['lon'][:]
-    ylat = datas.variables['lat'][:]
-    Bathy= datas.variables['elevation'][:,:]
+##  Pack bathy parameters into one list.
+    ndzlonlat=[ nlon, nlat, dlon, dlat, zlon, zlat ]
+
+    Bathy= - datas.variables['Bathymetry'][:,:]
     depthmax = np.amin(Bathy)
     hightmax = np.amax(Bathy)
     print(' Bathy range=', depthmax, hightmax)
     print(' Bathy shape=', Bathy.shape )
-    print(' x_lon range=', xlon[0], xlon[nlon-1])
-    print(' y_lat range=', ylat[0], ylat[nlat-1])
-
-##  Pack bathy parameters into one list.
-    ndzlonlat=[ nlon, nlat, dlon, dlat, xlon[0], ylat[0] ]
 
     datas.close()
 
@@ -74,7 +70,7 @@ def main():
     print(Bathy[nlat-1,0:nlon:1024])
 
 ##  Patch last row values to be exactly the ones in the next inner row.
-    Bathy[nlat-1,:] = Bathy[nlat-2,:]
+#   Bathy[nlat-1,:] = Bathy[nlat-2,:]
 
 ##  Check last column bathy values
 #   print('Bathy[',[f'{i:d}' for i in range(0,nlat,225)],',', nlon-1,']')
@@ -83,23 +79,33 @@ def main():
 #   print(Bathy[0:nlat:225,0])
 
 ##  Decide resolution levels and SMC grid i=j=0 lon-lat.
-    NLvl = 5
-    x0lon = 0.0
-    y0lat = 0.0
-    mlvlxy0 = [ NLvl, x0lon, y0lat ]
+    NLvl = 2
 
-    smcellgen(Bathy, ndzlonlat, mlvlxy0, FileNm=Wrkdir+GridNm, Global=Global, Arctic=Arctic)
-    
+##  For AMM15 domain, the refrence point is set to be at the SW corner of
+##  the AMM15 rotated grid, half-grid length offset for the true cell corner. 
+    x0lon = xlon[0] - 0.5*dlon 
+    y0lat = ylat[0] - 0.5*dlat 
+    istart = 2
+    jstart = 2
+    print( GridNm+" grid x0lon, y0lat =", x0lon, y0lat )
+
+    depmin=  5.0
+    dshalw= -150.0
+    mlvlxy0 = [ NLvl, x0lon, y0lat, xlon[0], ylat[0], xlon[-1], ylat[-2] ]
+
+    smcellbdy(Bathy, ndzlonlat, mlvlxy0, FileNm=Wrkdir+GridNm, Global=Global, 
+              Arctic=Arctic, depmin=depmin, dshalw=dshalw)
+
 ##  End of main program.
 
 
-def smcellgen(Bathy, ndzlonlat, mlvlxy0, FileNm='./SMC61250', Global=True, Arctic=False, 
-              depmin=0.0, dshalw=0.0, wlevel=0.0, GlbArcLat=84.4, **kwargs ): 
-    """ Generate multi-level SMC grid cells from size-1 resolusion bathy. JGLi16Dec2022 """
+def smcellbdy(Bathy, ndzlonlat, mlvlxy0, FileNm='./SMC61250', Global=True, Arctic=False,
+              depmin=0.0, dshalw=0.0, wlevel=0.0, GlbArcLat=84.4, **kwargs ):
+    """ Generate multi-level SMC grid boudarny cells from regional bathy. JGLi07Jul2023 """
 
     import numpy   as np
     import pandas  as pd
-    from smcellgen import recursion_add 
+    from smcellbdy import recursion_add
     from datetime import datetime
 
 ##  Bathy domain nlon and nlat and south-west first point zlon zlat.
@@ -107,7 +113,7 @@ def smcellgen(Bathy, ndzlonlat, mlvlxy0, FileNm='./SMC61250', Global=True, Arcti
     nlat = int(ndzlonlat[1])
     dlon = ndzlonlat[2]
     dlat = ndzlonlat[3]
-    zlon = ndzlonlat[4] 
+    zlon = ndzlonlat[4]
     zlat = ndzlonlat[5]
     xlon = np.arange(nlon)*dlon + zlon
     ylat = np.arange(nlat)*dlat + zlat
@@ -129,7 +135,7 @@ def smcellgen(Bathy, ndzlonlat, mlvlxy0, FileNm='./SMC61250', Global=True, Arcti
 ##  It has to be multiple of MFct rows as the resolution levels require.
 ##  Following Qingxiang's new numpy array index and broadcasting.
 
-    prnlat=np.zeros(20, dtype=float)
+    prnlat=np.zeros((20), dtype=float)
     prnlat[10:]=np.array([60.000000, 75.522486, 82.819245, 86.416678, 88.209213,
                           89.104712, 89.552370, 89.776188, 89.888094, 89.944047])
     prnlat[:10]=-1.0*prnlat[10:][::-1]
@@ -174,14 +180,20 @@ def smcellgen(Bathy, ndzlonlat, mlvlxy0, FileNm='./SMC61250', Global=True, Arcti
  
         istart = int(round( (xstart-xlon[0])/(MFMG*dlon) ))*MFMG
         jstart = int(round( (ystart-ylat[0])/(MFct*dlat) ))*MFct
-        iexpnd = int(round( (xend - xstart)/(MFMG*dlon) ))*MFMG
-        jexpnd = int(round( (yend - ystart)/(MFct*dlat) ))*MFct
+        iexpnd = int(round( (xend - xstart + dlon)/(MFMG*dlon) ))*MFMG
+        jexpnd = int(round( (yend - ystart + dlat)/(MFct*dlat) ))*MFct
 
 ##  Adjust i/jstart if start marge is less than MFMG/MFct.
-        if( istart - MFMG < 0 ): istart = MFMG
-        if( jstart - MFct < 0 ): jstart = MFct
+        if( istart < 0 ): istart = istart + MFMG
+        if( jstart < 0 ): jstart = jstart + MFct
 
         print( " Regioanl grid istr, ixpd, jstr, jxpd =", istart, iexpnd, jstart, jexpnd) 
+
+
+##  Work out boundary edge starting i, j values.
+        ibdy0 = istart; ibdyn = istart + iexpnd - MFMG
+        jbdy0 = jstart; jbdyn = jstart + jexpnd - MFct 
+        print (' Boundary edge i0, in, j0, jn =', ibdy0, ibdyn, jbdy0, jbdyn )
 
 ##  Distance of Bathy south-west to cell i=j=0 point as ishft and jequt.
     ishft = int( round( (zlon - x0lon)/dlon - 0.5 ) )
@@ -195,51 +207,15 @@ def smcellgen(Bathy, ndzlonlat, mlvlxy0, FileNm='./SMC61250', Global=True, Arcti
     for i in range(1,NLvl+1):
         print(i, 2**(i-1), recursion_add(i) )
 
-##  Decide resolution levels and check whether bathy is fit for it.
-    Abrt = False
-
-##  If Arctic part is required extra merging will be required in the Arctic part. 
-    if( Global ): Merg = 8
-    if( Arctic ):
-        ArcLat = GlbArcLat
-        jArc   = int( round( (ArcLat-y0lat)/dlat/MFct )*MFct )
-##  Maximum merged line is just outside the polar cell at base resolution.
-        Polcat = 90.0 - dlat*MFct*1.5
-        k=10
-        while( Polcat > prnlat[k] and k < 20 ):
-            k += 1
-            Merg = 2**(k-10)
-        print(' Arctic and boundary j and latitude =', jArc, jArc*dlat+y0lat, GlbArcLat)
-
-    print(' Maximum merge factor is =', Merg )
-    
-##  Latitude numbers should be multiple of MFct for global grid.
-    mlat = (nlat//MFct)*MFct 
-    if( Global and mlat != nlat ):
-        print(" Latitude numbers unfit for global grid with level ", NLvl )
-        print(" nlat, (nlat//MFct)*MFct, MFct =", nlat, mlat, MFct )
-        Abrt = True
-
-##  Longitude number needs to be multiple of MFct*Merg due to zonal merging.
-##  Global i will be consistent to global model and wrap at 360 deg or NCM.
-    LFct = MFct*Merg
-    mlon = (nlon//LFct)*LFct 
-    if( Global and mlon != nlon ):
-        print(" Longitude numbers unfit for global grid with level ", NLvl )
-        print(" nlon, mlon, LFct =", nlon, mlon, LFct )
-        Abrt = True
-
-    if( Abrt ): exit()
-
 ##  Initialise cell count variables
-    Ns = np.zeros( (NLvl+1), dtype=int )
+    Ns = np.zeros((NLvl+1), dtype=int)
 
 ##  Bathy value is assumed to be elevation above sea level so depth below sea level is negative.
 ##  Ensure minimum depth, depmin, is no less than water level, wlevel.
     if( depmin < wlevel ):
         print(" Minimum depth is adjusted equal to water level", depmin, wlevel)
         depmin = wlevel
- 
+
 ##  Define shalow water area maximum level to be 1 level below NLvl. 
     if( dshalw >= depmin): 
         dshalw=depmin
@@ -254,7 +230,7 @@ def smcellgen(Bathy, ndzlonlat, mlvlxy0, FileNm='./SMC61250', Global=True, Arcti
    
 ##  Loop ends fo i/j-loop ends at bathy data end.
     iend = istart + iexpnd
-    jend = jstart + jexpnd - MFct
+    jend = jstart + jexpnd
 
 ##  Initial smcels as a list to append cell arrays.
     smcels = []
@@ -288,23 +264,28 @@ def smcellgen(Bathy, ndzlonlat, mlvlxy0, FileNm='./SMC61250', Global=True, Arcti
 ##  For global grid, loop over all longitude point.
         for i in range(istart, iend, iFct):
 
-##  Extract a sub-array from Bathy for cell generating loop.
-            subathy = np.zeros((3*MFct, 3*iFct), dtype=float)
+##  Declare a sub-array for cell generating.
+            subathy = np.zeros((MFct, iFct), dtype=float)
 
-            if( WrapLon ): 
+            if( WrapLon ):
                 ii = (i + ishft + NCM) % NCM
-                for ib in range(3*iFct):
-                    ik = (i+ib-iFct+NCM ) % NCM
-                    subathy[:,ib] = Bathy[j-MFct:j+2*MFct,ik]
             else:
-                ii = i + ishft 
-                subathy[:,:] = Bathy[j-MFct:j+2*MFct,i-iFct:i+2*iFct]
+                ii = i + ishft
+
+##  Extract a sub-array from Bathy for cell generating.
+            if( (j == jbdy0 or j == jbdyn) ):
+                subathy[:,:] = Bathy[j:j+MFct,i:i+iFct]
+            elif( i == ibdy0 or i == ibdyn ):
+                subathy[:,:] = Bathy[j:j+MFct,i:i+iFct]
+            else:
+##  None boundary area set bathy to be land above depmin.
+                subathy[:,:] = 999.0
 
 ##  Define a logical array in central area to control loop
-            subchck = subathy[MFct:2*MFct,iFct:2*iFct] < depmin
+            subchck = subathy[:,:] < depmin
 
 ##  Count any sea points within subathy deeper than shallow water depth.
-            nsubdep = np.sum( subathy[MFct:2*MFct,iFct:2*iFct] < dshalw )
+            nsubdep = np.sum( subathy[:,:] < dshalw )
 
 ##  Loop over NLvl to define different sized cells according to open sea area,
 ##  starting with base level of size-MFct cell
@@ -326,11 +307,8 @@ def smcellgen(Bathy, ndzlonlat, mlvlxy0, FileNm='./SMC61250', Global=True, Arcti
                         if((levl == 1 and (jprasn[jprset]+2 <= j+jb < jprasn[jprset+1]-2)) or (levl > 1)): 
                             for ib in range(0,iFct,irng):
 ##  Check cell area and its surrounding points are all sea points to define the cell. 
-                                if( (np.sum( subchck[jb:jb+jchk,ib:ib+irng] ) == irng*jchk) and 
-                                    (np.sum( subathy[jb+MFct-jdk:jb+MFct+jchk+jdk, 
-                                                     ib+iFct-idg:ib+iFct+irng+idg] < depmin )
-                                                  == (irng+2*idg)*(jchk+2*jdk)) ):
-                                    bsum = np.sum( subathy[jb+MFct:jb+MFct+jchk, ib+iFct:ib+iFct+irng] )
+                                if( (np.sum( subchck[jb:jb+jchk,ib:ib+irng] ) == irng*jchk) ): 
+                                    bsum = np.sum( subathy[jb:jb+jchk, ib:ib+irng] )
 ##  Use diffence from depmin to define water depth.  JGLi28Feb2023
 #                                   kdepth = int( round( wlevel - bsum/float(irng*jchk) ) )
 #                                   subcel=[ii+ib, jj+jb, irng, jchk, np.max([5,kdepth])]
@@ -350,25 +328,6 @@ def smcellgen(Bathy, ndzlonlat, mlvlxy0, FileNm='./SMC61250', Global=True, Arcti
 
 ##  End of i, j loops. 
 
-##  For global grid with Arctic part, define north polar cell. 
-    if( Global and Arctic ):
-        j=nlat-MFct
-
-##  Full grid jj and latitude for this row
-        jj=j + jequt
-        yj=ylat[j] 
-
-##  Polar cell x-size is set to be the same as surounding cells.
-        ism = Merg 
-        print ("Polar cell j, jj, x-size ism and latitude yj=", j, jj, ism*MFct, yj)
-
-##  Last MFct rows in Bathy merged into one polar cell.
-        dsum = np.sum( Bathy[j:nlat,:] )
-        kdepth = int( round( wlevel - dsum/(MFct*nlon) ) )
-        smcels.append( [0, jj, MFct*ism, MFct, kdepth] )
-        Ns[NLvl] += 1
-        print (MFct*ism, MFct, ' size polar cell for j, jj, yj=', j, jj, yj )
-
 ##  All cells are done.
     print(  " *** Done all cells Ns =", Ns )
     NL = sum(Ns[:])
@@ -383,21 +342,6 @@ def smcellgen(Bathy, ndzlonlat, mlvlxy0, FileNm='./SMC61250', Global=True, Arcti
 ##  Cell array output format for each cell.
     fmtcel='%6d %5d %4d %3d %5d'
 
-##  Separate Arctic part out of the cells and work out boundary cell numbers.
-    if( Arctic ):
-        jbdy = MFct*2
-        smcArc= smcels[smcels[:,1]>=jArc]
-        nbglo = smcArc[smcArc[:,1]<jArc+  jbdy].shape[0]
-        nbArc = smcArc[smcArc[:,1]<jArc+2*jbdy].shape[0] - nbglo
-        nArct = smcArc.shape[0]
-        hdr = f'{nArct:8d} {nbglo:5d} {nbArc:5d}'
-        Cell_Arct = FileNm +'BArc.dat'
-        print(' ... saving BArc.dat with header '+hdr )
-        np.savetxt(Cell_Arct, smcArc, fmt=fmtcel, header=hdr, comments='')
-##  Separate Global part out of the cells by jArc value
-        smcels = smcels[smcels[:,1]<jArc+2*jbdy]
-        Ns[NLvl] = Ns[NLvl] - nArct + nbArc + nbglo
-
 ##  Recount global part cell numbers and deduct size-8 Arctic cells.
     Ns[0] = smcels.shape[0]
     if( sum(Ns[1:]) != Ns[0] ):
@@ -406,13 +350,13 @@ def smcellgen(Bathy, ndzlonlat, mlvlxy0, FileNm='./SMC61250', Global=True, Arcti
 ##  Save the cell array, anyway.
     hdr = ''.join( [f"{n:8d}" for n in Ns] ) 
     print(' ... saving Cels.dat with header '+hdr )
-    Cell_file = FileNm+'Cels.dat'
+    Cell_file = FileNm+'Bdys.dat'
     np.savetxt(Cell_file, smcels, fmt=fmtcel, header=hdr, comments='')
 
-    print( " smcellgen finished at %s " % datetime.now().strftime('%F %H:%M:%S') )
+    print( " smcellbdy finished at %s " % datetime.now().strftime('%F %H:%M:%S') )
 
-##  End of smcellgen function.
-    return 0
+##  End of smcellbdy function.
+
 
 if __name__ == '__main__':
     main()

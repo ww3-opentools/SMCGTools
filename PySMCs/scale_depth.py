@@ -16,10 +16,10 @@ def scale_depth( ncstr=0, nclrm=131 ):
 
     import numpy as np
 
-    depth=np.array([10000,1000,100,10,1], dtype=np.int)
+    depth=np.array([10000,1000,100,10,1], dtype=int)
     cstar=np.log10(depth[0]+1000.0)
     factr=(nclrm - 1)/cstar
-    marks= ncstr + np.rint( (cstar - np.log10(depth))*factr ).astype(np.int)
+    marks= ncstr + np.rint( (cstar - np.log10(depth))*factr ).astype(int)
     print( nclrm, ' colors with depth marks at ', depth[::-1])
 
     return ( depth, factr, cstar, marks, ncstr, nclrm )
