@@ -574,12 +574,16 @@
           lm = ICE(2,NC-NArc+1) - MRFct*15
           mn = NINT( (86.0 - ZLat)/(DLat*MRFct) )*MRFct
       ENDIF
+      WRITE(6,*) '  Initial non-zero S/N belt and ArcPatch j ranges =', jk, kl, lm, mn
+      WRITE(6,*) '  Cell array j range =', MINVAL(ICE(2,:)), MAXVAL(ICE(2,:)+ICE(4,:))
 
 !! N Atlantic centre at one size-8 cell centre.
       ijk=NINT(330.0/(MRFct*DLon))*MRFct + MRFct/2
       lmn=NINT(  5.0/(MRFct*DLat))*MRFct + MRFct/2
 
 !! Loop over all cells to select strip points. 
+      ii = 0
+      jj = 0
       DO i=1,NC
          ll=ICE(2,i)
          mm=ICE(2,i) + ICE(4,i)
@@ -590,10 +594,12 @@
 !!  Northern strip above SNLat, use Spec1D
             IF( kl .LT. ll  .AND.  ll .LT. lm ) THEN
                 WSpc(1:NDir,j,i)=Spec1D*Spec1F(j)
+                ii = ii + 1
             ENDIF
 !!  South strip below SSLat, use Spec2D
             IF( mm .LT. jk ) THEN
                 WSpc(1:NDir,j,i)=Spec2D*Spec2F(j)
+                jj = jj + 1
             ENDIF
 
 !!  For global grid with Arctic part, use stripes.
@@ -613,6 +619,8 @@
          ENDDO
 
       ENDDO
+
+      WRITE(6,*) '  Initial non-zero S/N belt points =', ii/NFrq, jj/NFrq
 
       WRITE(6,*) '  Wind file conversion done!'
 
@@ -1018,7 +1026,7 @@
 
 !  Output a few to check input values
        DO J=1, NC, NC/4
-          WRITE(6,'(i8,2i6,2i4,i6)') J, (ICE(N,J), N=1,4), KG(J)
+          WRITE(6,'(i8,2i6,i5,i4,i6)') J, (ICE(N,J), N=1,4), KG(J)
        END DO
 
 !    Boundary -9 to 0 cells for cell size 2**n
