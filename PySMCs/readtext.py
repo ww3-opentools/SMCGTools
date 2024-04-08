@@ -1,14 +1,14 @@
 """
-Read data arrays from a tabled text file. Missing values in the
-table will be filled as none.
-
-Function readtext(filestring) read the cell file specified by
+Function readtext(filestring) read the text data file specified by
 the filestring, which includes path/file_name.txt
+
+Missing values in the table will be filled as none.
 
 The main() function demonstration how the readtext could be called
 as a stand alone function.
 
-              JGLi18Feb2019 
+First created:      JGLi18Feb2019 
+Last modified:      JGLi04Apr2024 
 
 """
 
@@ -21,7 +21,6 @@ def readtext(textfile, skiprows=[0]):
     import numpy  as np
     import pandas as pd
 
-    print (" Read table from ", textfile)
     archd=open(textfile, 'r') 
 ##  Assume last line in skiprows contains the header parameters.
     for i in range(len(skiprows)):
@@ -30,6 +29,8 @@ def readtext(textfile, skiprows=[0]):
 ##  Split the last one of skipped lines as header parameters.
     hdlist = hdrskp.split()
     archd.close()
+
+    print (" Reading ", textfile+str(hdlist) )
 
     arcel=pd.read_csv(textfile, sep='\s+',skiprows=skiprows,header=None)
     table=arcel.values
@@ -41,14 +42,13 @@ def main():
     import numpy  as np
     import pandas as pd
 
-    cellfile = input(" Please enter the cell file as 'path/file.dat' > ")
-#   cellfile='./G50SMCels.dat'
-    ncs, cel = readtext( cellfile )
-    nc = int(ncs[0])
+    textfile = input(" Please enter the cell file as 'path/file.dat' > ")
+#   textfile='./G50SMCels.dat'
+    hdr, dat = readtext( textfile )
 
-    print ("Total number of cells nc =", nc)
-    print ("First cell array is ", cel[0,:])
-    print (" Last cell array is ", cel[nc-1,:])
+    print ("Header line contains", ncs )
+    print ("First data line is ", dat[ 0,:])
+    print (" Last data line is ", dat[-1,:])
 
 if __name__ == '__main__':
     main()
