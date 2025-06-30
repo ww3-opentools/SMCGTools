@@ -1,17 +1,8 @@
 """
-##  Adapted to generate G6-25kmSMCels from ASCII Bathymetry files. 
-##                                   JGLi18Sep2014
-##  Adapted for global 6-12-25-50 km SMC grid for CMA model. JGLi10Aug2018 
-##  Converted from IDL into Python code.    JGLi14Feb2019 
-##  Rectify size-1 cell bug and re-generate 6-50 cels.  JGLi04May2021 
-##  Modified for SMCGTools to generate sample 6-50 cells.  JGLi06Oct2021 
-##  Updated to read netCDF bathy and generate 2.5-5-10-20-40 km cells.  JGLi10Nov2022 
-##  Separate main function from smcellgen function.   JGLi18Nov2022  
-##  Modified to generate European 1.25-2.5-5-10 km grid.  JGLi29Nov2022
-##  Modified to generate Caspian Sea 2.5-5-10-20 km grid.  JGLi28Feb2023
-##  Modified to generate Caspian Lake Superior 3-7-13-25 km grid.  JGLi22Mar2023
-##  Modified to generate Caspian Lake Superior 6-12-25 km grid.  JGLi28Apr2023
-##  Updated to use water level parameter instead of depmin.  JGLi10Nov2023
+##  Program to generate 6-25km SMC cell arrays for Gt Lakes and Caspian Sea.
+##
+##  First created:        JGLi28Feb2023
+##  Last modified:        JGLi03Feb2025
 ##
 """
 
@@ -61,13 +52,13 @@ def main():
     datas.close()
 
 ##  Check top row bathy values
-    print('Bathy[',nlat-1,[f'{i:d}' for i in range(0,nlon,1024)],']')
-    print(Bathy[nlat-1,0:nlon:1024])
+#   print('Bathy[',nlat-1,[f'{i:d}' for i in range(0,nlon,1024)],']')
+#   print(Bathy[nlat-1,0:nlon:1024])
 
 ##  Patch last row values to be exactly the ones in the next inner row.
 #   Bathy[nlat-1,:] = Bathy[nlat-2,:]
 
-##  Check last column bathy values
+##  Check last and first column bathy values
 #   print('Bathy[',[f'{i:d}' for i in range(0,nlat,225)],',', nlon-1,']')
 #   print(Bathy[0:nlat:225,nlon-1])
 #   print('Bathy[',[f'{i:d}' for i in range(0,nlat,225)],',', 0,']')
@@ -112,13 +103,14 @@ def main():
         smcellgen(Bathy, ndzlonlat, mlvlxy0, FileNm=Wrkdir+GridNm, 
             Global=Global, depmin=depmin, dshalw=dshalw, wlevel=wlevel) 
     
-        print( "GridNm cells saved in ", Wrkdir+GridNm+'cels.dat')
+        print( "GridNm cells saved in ", Wrkdir+GridNm+'Cels.dat')
 
 ##  End of lake grid loop.
     
-##  End of main program.
-
+##  End of main function.
 
 if __name__ == '__main__':
     main()
+
+##  End of program Lakes625Cells.py.
 

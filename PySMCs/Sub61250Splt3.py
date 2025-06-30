@@ -1,39 +1,14 @@
 """
+##  Program to split the SMC61250 grid into 3 sub-grids.
 ##
-##  It reads a cell file sorted by cell j-values so cell loop  
-##  will ensure j values are in ascending order.  3 dividing
-##  lines are defined in a text file.  Split cells are saved 
-##  for each sub-grid along with their boundary cells.
-##
-#;  First created: For 4 views     J G Li   26 Nov 2008
-#;  Modified for Color grids       J G Li   26 Aug 2009
-#;  Adapted for 25km SMC grids     J G Li    3 Feb 2010
-#;  Updated G25SMC-12c grids.      J G Li   25 May 2011
-#;  Sterographic projection nR.    J G Li   30 Jun 2011
-#;  Adapted for G50SMC grid.       J G Li   19 Aug 2011
-#;  Extended to fill the Arctic.   J G Li    5 Oct 2011
-#;  Rectify polar cell position.   J G Li   25 Oct 2011
-#;  Simplify with readcell and steromap.  JGLi12Nov2014
-##
-##  Converted into a Python function.     JGLi05Dec2018
-##  Save ELat/Lon and sx/yc in file.      JGLi11Dec2018
-##  Add color map and draw color bar.     JGLi14Dec2018
-##  Adapted for SMC36125 grid plot.       JGLi03Jan2019
-##  Use polycollections for two plots.    JGLi30Jan2019
-##  Adapted for SMC61250 global grid.     JGLi18Feb2019
-##  Colorbar draw with own colrpoly.      JGLi22Feb2019
-##  Use general smcglobal/local.py.       JGLi12Mar2019
-##  Separate the grid into subgrids.      JGLi28Aug2020
-##  Lower Atlantic boundary line to 22S.  JGLi30Oct2020
-##  Split SMC36125 into 3 sub-grids.      JGLi08Feb2021
-##  Modified splitting for 3 sub-grids.   JGLi10Sep2021
-##  For splitting SMC61250 3 sub-grids.   JGLi08Oct2021
+##  First created:        JGLi08Feb2021 
+##  Last modified:        JGLi05Feb2025 
 ##
 """
 
 def main():
-##  Import relevant modules and functions
 
+##  Import relevant modules and functions
     import numpy as np
     import pandas as pd
 
@@ -240,9 +215,10 @@ def main():
 
     print( " Program finished at %s " % datetime.now().strftime('%F %H:%M:%S') )
 
-## End of Sub61250splt3 main function ##
+##  End of main() function.
 
 if __name__ == '__main__':
     main()
 
+##  End of Sub61250splt3.py program. 
 

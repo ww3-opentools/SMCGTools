@@ -1,5 +1,10 @@
+"""
+##  Read a text file and merge all lines into a string.
+##
 ##  First created:  JGLi06Apr2020
 ##  Last modified:  JGLi20Apr2023
+##
+"""
 
 def readmerg(inpfile, KeepNewline=True):
     """ Read a text file line by line until the end and merge into a string.
@@ -19,6 +24,8 @@ def readmerg(inpfile, KeepNewline=True):
 
     return vary
 
+##  End of readmerg function.
+
 
 def main():
 
@@ -34,8 +41,9 @@ def main():
 
 ##  End of main().
 
-
 if __name__ == '__main__':
     main()
+
+##  End of readmerg.py program. 
 
 

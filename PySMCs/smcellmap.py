@@ -1,16 +1,18 @@
 """
-Two functions are defined here: one to calculate the cell centre
-longitude and latitude from a given list of cell IDs; and another 
-to map a list of longitude and latitude points with SMC cell IDs. 
-Use input zlon, zlat, dlon, dlat and cell array for cell locating.
-Return the cell id number if any point is within the cell are.  
-Unmatched points are marked by 0 cell numbers. 
-
-The main() function demonstration how the two functions could be 
-called as stand alone functions.
-
-              JGLi26Nov2020 
-
+##  Three functions are defined here: one to calculate the cell centre
+##  longitude and latitude from a given list of cell IDs; another one 
+##  to map a list of longitude and latitude points with SMC cell IDs. 
+##  The final one to find the cell IDs in the full cell list for a set 
+##  of cell arrays given in a list.
+##
+##  Use input zlon, zlat, dlon, dlat and cell array for cell locating.
+##  
+##  The main() function demonstration how the three functions could be 
+##  called as stand alone functions.
+##
+##  First created:        JGLi26Nov2020 
+##  Last modified:        JGLi05Feb2025 
+##
 """
 
 ##  idlst is an integer array of cell ids, whose centre lon-lats will be returned
@@ -59,8 +61,9 @@ def smcell(idlst, cel, zdlnlt):
 
     return  xlon, ylat  
 
+##  End of function smcell.
 
-##
+
 def smcmap(xlon, ylat, cel, zdlnlt):
     """  
     Match a given list of lon-lat points to SMC grid cell IDs. 
@@ -121,12 +124,13 @@ def smcmap(xlon, ylat, cel, zdlnlt):
 
 ##  End of while loop.
 
-
     if( mfnd < nx ): print(" Missed number of points:", nx-mfnd)
 
     return idlst 
 
-##
+##  End of function smcmap.
+
+
 def smcids(idcel, cel, nids=[]):
     """  
     Find cell ids for all cells in idcel from the full cell array cel. 
@@ -190,6 +194,8 @@ def smcids(idcel, cel, nids=[]):
 ##  All done, return matched cell ids.
     return  idlst 
 
+##  End of function smcids.
+
 
 def main():
 
@@ -239,7 +245,8 @@ def main():
 
 #   End of main function.
 
-
 if __name__ == '__main__':
     main()
+
+##  End of smcellmap.py program. 
 

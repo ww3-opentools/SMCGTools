@@ -1,66 +1,50 @@
 """
-#;  Adapted from idl script for PVWave  12 Sept 2005
-#;  It reads MFT model output files and plots contours of the
-#;  tracer concentration in a ps file.
-#;  S4R sterographic projection.  JGLi30Jun2011
-#;  SMC625 global part only.      JGLi12Dec2011
-#;  SMC625 SWH plot from WW3 text files.  JGLi16Feb2012
-#;  SMC625 30 Frequency bin SWH plot.     JGLi02Oct2012
-#;  SMC6125 grid swh plot from Vn4 SMC6125Tx.  JGLi10Jan2013
-#;  Input yymm from file.                      JGLi23Oct2013
-#;  Adapted for G50SMC grid swh.               JGLi19Nov2013
-#;  Extended to include Arctic.                JGLi11Feb2014
-#;  Converted into Python.                     JGLi20Dec2018
-##  Adapted for SMC36125 grid swh plot.        JGLi04Jan2019
-##  Use PolyCollection to draw swh plot.       JGLi30Jan2019
-##  Adapted for SMC61250 grid swh plot.        JGLi22Feb2019
-##  Use swhglobl function to draw plot.        JGLi28Feb2019
-##  Optional global or local function.         JGLi01Mar2019
-##  Add paper orientation and format options.  JGLi06Mar2019
-##  Updated for Python 3.                      JGLi28Mar2019
-##  Adapted for Pacf36125 sub-grid model.      JGLi06Oct2020
-##  Suspend Arctic part from Atln36125.        JGLi18Nov2020
-##  Restore Arctic part from Atln36125.        JGLi08Jan2021
-##  Adapted for 3 sub-grids wht plots.         JGLi25Jan2021
-##  Adapted for Sub61250 grids swht plots.     JGLi11Oct2021
+## Program to draw Sub61250 grid SWH field.
+##
+## First created:    JGLi30Jun2011
+## Converted into Python.    JGLi20Dec2018
+## Adapted for 3 sub-grids SWH plots.    JGLi25Jan2021
+## Last modified:    JGLi02May2025
 ##
 """
 
-if( 1 > 0 ):
-##  Import relevant modules and functions
+def main():
 
+## Import relevant modules and functions
     import numpy as np
     import pandas as pd
+    import matplotlib.pyplot as plt
 
     from datetime import datetime, timedelta
 
     from readtext import readtext
-    from readcell import readcell
     from rgbcolor import rgbcolor
+    from smcswhcv import smcswhcv 
+    from smcfield import smcfield 
+    from addtexts import addtexts 
 
-##  Path of the cell projection files
+## Path of the cell projection files
     DatSub='../DatSub/'
     WrkDir='../tmpfls/' 
 
-##  Use own color map and defined depth colors 
+## Use own color map and defined depth colors 
     colrfile = 'rgbspectrum.dat'
     colrs = rgbcolor( colrfile )
 
-##  Read start and end datetime from fdate
+## Read start and end datetime from fdate
     datefl = open( 'strendat', 'r')
     strend = datefl.read().split()
     datefl.close()
 
-##  Convert into datetime variables
+## Convert into datetime variables
     start = datetime.strptime(strend[0], '%y%m%d%H')
     endat = datetime.strptime(strend[1], '%y%m%d%H')
     timdx = pd.date_range(start=start, end=endat, freq=strend[2])
 
-##  Possible selection of your plot types. 
-#   gorloc={0:'SubG',1:'Pacf',2:'Atln'}
+## Possible selection of your plot types. 
     gorloc={0:'SubG',1:'Soth',2:'Pacf',3:'Atln'}
 
-##  Prompt selection choices and ask for one input
+## Prompt selection choices and ask for one input
     print (" \n ", gorloc)
     instr = input("\n *** Please enter your selected number here > ")
     m = int(instr)
@@ -83,16 +67,22 @@ if( 1 > 0 ):
         svrts = vrtcls['svrt'] ; scels = vrtcls['scel']
         config = vrtcls['cnfg']
         print (' n/svrts/cels config read ') 
-        from swhglobl import swhglobl
-        papror='landscape'
 
     else:
         nvrts = vrtcls['nvrt'] ; ncels = vrtcls['ncel'] 
         config = vrtcls['cnfg']
         print (' nvrts, ncels and config read ') 
-        from swhlocal import swhlocal
-        papror='portrait'
 
+## Selected plot configuration parameters.
+    sztpxy = config[1]
+    rngsxy = config[2]
+    papror='portrait'
+    mdlswh=pltype[0:4]+'61250'
+
+## Alternative font sizes.
+    fntsz=12.0
+    fntsa=1.20*fntsz 
+    fntsb=1.50*fntsz
     
 ##  Loop over datetime of swh files
     swhSoth = '../../Sub650Soth/ww3.'
@@ -131,26 +121,80 @@ if( 1 > 0 ):
         datms = dt.strftime('%Y%m%d%H')
 
 ##  Call function to draw the swh plot.
-        figfl = WrkDir + 'swh' + pltype + dt.strftime('%y%m%d%H') + '.ps'
+        epsfl = WrkDir+'swh'+pltype[0:4]+dt.strftime('%y%m%d%H')+'.eps'
 
         if( pltype == 'SubG' ): 
-##  Merge all sub-grid SWHs together.
+##  Merge all sub-grid SWHs together for global plot.
             swhs = np.hstack( (swh1, swh2, swh3) )
 
-            swhglobl(swhs,nvrts,ncels,svrts,scels,colrs,config,
-                 mdlname= ModlName,datx=datms,psfile=figfl)
+## Convert swh field into color indexes.
+            nswh, swhmnx, swhscl = smcswhcv( swhs )
+            txtary=[ [mdlswh,    'k', fntsb],
+                     ['SWHmn='+swhmnx[0], 'b', fntsa],
+                     ['SWHmx='+swhmnx[1]+' m', 'r', fntsa],
+                     [datms,     'k', fntsb] ]
+
+## Open figure plt for 2 panels.
+            fig=plt.figure(figsize=sztpxy[0:2])
+            ax1=fig.add_subplot(1,2,1)
+
+## Draw SWH field on northern heimisphere panel.
+            smcfield(ax1, nswh, nvrts, ncels, colrs, config,
+                     vscle=swhscl, vunit='SWH m')
+
+## Draw field on southern hemisphere subplot panel.
+            ax2=fig.add_subplot(1,2,2)
+            smcfield(ax2, nswh, svrts, scels, colrs, config,
+                     vscle=swhscl, vunit=' ')
+
+## Put statistic information inside subplot ax2
+            ax2.text(sztpxy[2], 9.0, mdlswh, color='r', 
+                horizontalalignment='center', fontsize=fntsb)
+            xydxdy=[sztpxy[2], sztpxy[3]+1.0, 0.0, 0.6]
+            addtexts(ax2, xydxdy, txtary[1:])
+
+            plt.subplots_adjust(left=0.01, bottom=0.0, right=0.99, 
+                                 top=1.0, wspace=0.01, hspace=0.0)
+
         else:
+## Draw individual sub-grid SWH field.
             if( m == 1 ): swhs = swh1
             if( m == 2 ): swhs = swh2
             if( m == 3 ): swhs = swh3
 
-            swhlocal(swhs,nvrts,ncels,colrs,config,
-                 mdlname= ModlName, datx=datms,psfile=figfl,
-                 paprorn=papror )
+## Convert swh field into color indexes.
+            nswh, swhmnx, swhscl = smcswhcv( swhs )
+            txtary=[ [mdlswh,    'k', fntsb],
+                     ['SWHmn='+swhmnx[0], 'b', fntsa],
+                     ['SWHmx='+swhmnx[1]+' m', 'r', fntsa],
+                     [datms,     'k', fntsb] ]
+
+## Ople figure plt and draw SWH field.
+            fig, ax = plt.subplots(figsize=sztpxy[0:2])
+            smcfield(ax, nswh, nvrts, ncels, colrs, config,
+                     vscle=swhscl, vunit='SWH m')
+
+## Put statistic information inside plot ax.
+            xydxdy=[sztpxy[2], sztpxy[3]-0.5, 0.0, -0.6]
+            addtexts(ax, xydxdy, txtary)
+            plt.subplots_adjust(left=0,bottom=0,right=1,top=1)
+
+## Save grid plot as eps file.
+        print (" ... saving the smc grid plot as ", epsfile )
+        plt.savefig(epsfile, dpi=None,facecolor='w',edgecolor='w', \
+                    orientation=paprorn)
+        plt.close()
 
 ##  Increase ijk for next plot
         ijk += 1
         print (" Finish plot No.", ijk," at ", datetime.now())
 
 ##  End of date loop
+
+## End of main() function. 
+
+if __name__ == '__main__':
+    main()
+
+## End of Sub61250SWHts.py program.
 

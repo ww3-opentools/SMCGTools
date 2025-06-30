@@ -1,0 +1,5 @@
+ AMM153km 2 level grid zlon zlat dlon dlat for siz-1 cells. JGLi12May2025
+ -10.89625 -7.30095  0.0135  0.0135
+ /data/users/jianguo.li/Bathy/AMM15Wave/   /data/users/jianguo.li/Bathy/AMM15Wave/DatSMC/
+  0  Number of polar cells or polar parts. 0 implies no Arctic part.
+

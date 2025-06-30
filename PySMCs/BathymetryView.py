@@ -5,7 +5,6 @@ def main():
 
     import sys
     import numpy    as np
-    import numpy.ma as ma
     import netCDF4  as nc
     import matplotlib.pyplot as plt
     from rgbcolor import rgbcolor
@@ -71,8 +70,10 @@ def main():
 
 #   plt.show()
     
-##  End of main function.
+## End of main function.
 
 if __name__ == '__main__':
     main()
+
+## End of BathymetryView.py program.
 

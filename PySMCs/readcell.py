@@ -13,8 +13,10 @@ It could read more than 2 cell array files if needed.
 The main() function demonstrates how the readcell could be called
 as a stand alone function and merge the Arctic part manually.
 
+Use Numpy genfromtxt to read cell array.  JGLi26Feb2025
+
 First created:              JGLi18Feb2019 
-Last modified:              JGLi03Apr2024 
+Last modified:              JGLi26Feb2025 
 
 """
 
@@ -22,7 +24,6 @@ Last modified:              JGLi03Apr2024
 ##  For instance celfiles=['path/celfile.dat', 'path/arcfile.dat']
 def readcell(celfiles):
     import numpy  as np
-    import pandas as pd
     
     nfls = 0 
     for celfile in celfiles:
@@ -31,8 +32,9 @@ def readcell(celfiles):
         hdlin=archd.readline()
         archd.close()
          
-        flcel=pd.read_csv(celfile, sep='\s+',skiprows=[0],header=None)
-        celin=flcel.values
+
+##  Read the cell array as Numpy integers but skip first count line.
+        celin=np.genfromtxt(celfile, dtype=int, skip_header=1)
         nfls += 1
 
         if( nfls <= 1):
@@ -50,7 +52,6 @@ def readcell(celfiles):
 def main():
 
     import numpy  as np
-    import pandas as pd
 
     cellfile = input(" Please enter the cell file as 'path/file.dat' > ")
     

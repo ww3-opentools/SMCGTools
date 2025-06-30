@@ -1,8 +1,8 @@
 """
-#; Procedure to setup regular grid parameters for a SMC grid.
+## Procedure to setup regular grid parameters for a SMC grid.
 ## Converted from IDL to Python.  JGLi26Feb2019
-#; First created:   25 Feb 2015   Jian-Guo Li
-#; Last modified:   18 Jul 2023   Jian-Guo Li
+## First created:   25 Feb 2015   Jian-Guo Li
+## Last modified:   26 Jun 2025   Jian-Guo Li
 ##
 """
 
@@ -37,7 +37,7 @@ def regulrinfo( Model, zdlonlat, NLvLonLat, FLon=0.0, FLat=-80.0, **kwargs ):
     DLonR= dlon*MFct
     DLatR= dlat*MFct
 
-#;; Use input FLon and FLat to adjust starting points. 
+##  Use input FLon and FLat to adjust starting points. 
     JEqut= MFct*int(round( (zlat - FLat)/DLatR ))
     IShft= MFct*int(round( (zlon - FLon)/DLonR ))
 
@@ -49,7 +49,6 @@ def regulrinfo( Model, zdlonlat, NLvLonLat, FLon=0.0, FLat=-80.0, **kwargs ):
     NCol = NLon//MFct
     NRow = NLat//MFct
     if( Global ):
-        NCol = int(round(360.0/DLonR))
         NR90 = int(round( (90.0 - FLatR)/DLatR + 0.5 )) 
         NRow = min([NR90, NRow])
 
@@ -82,14 +81,16 @@ def regulrinfo( Model, zdlonlat, NLvLonLat, FLon=0.0, FLat=-80.0, **kwargs ):
  
 def main():
     """  Generate regular grid parameters for SMC251040 global grid. """
-    Model='SMC251040'
+    Model='SMC61250'
     Wrkdir='./'
-    zrdlonlat=[ 0.0, 0.0, 0.03515625, 0.025 ]
-    NLvLonLat=[ 5, 10240, 7200 ]
-    NRLv = regulrinfo( Model, zrdlonlat, NLvLonLat, FLat=-80.5 ) 
+    zrdlonlat=[ 0.0, 0.0, 0.087890625, 0.058593750 ]
+    NLvLonLat=[ 4, 4096, 3072 ]
+    NRLv = regulrinfo( Model, zrdlonlat, NLvLonLat, FLat=-79.8 ) 
 
 ##  End of main program.
 
 if __name__ == '__main__':
     main()
+
+##  End of program regulrinfo.py.
 

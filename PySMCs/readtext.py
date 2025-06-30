@@ -8,7 +8,7 @@ The main() function demonstration how the readtext could be called
 as a stand alone function.
 
 First created:      JGLi18Feb2019 
-Last modified:      JGLi04Apr2024 
+Last modified:      JGLi06Mar2025 
 
 """
 
@@ -30,7 +30,7 @@ def readtext(textfile, skiprows=[0]):
     hdlist = hdrskp.split()
     archd.close()
 
-    print (" Reading ", textfile+str(hdlist) )
+    print (" Reading", textfile, str(hdlist[0]) )
 
     arcel=pd.read_csv(textfile, sep='\s+',skiprows=skiprows,header=None)
     table=arcel.values
@@ -46,7 +46,7 @@ def main():
 #   textfile='./G50SMCels.dat'
     hdr, dat = readtext( textfile )
 
-    print ("Header line contains", ncs )
+    print ("Header line contains", hdr )
     print ("First data line is ", dat[ 0,:])
     print (" Last data line is ", dat[-1,:])
 

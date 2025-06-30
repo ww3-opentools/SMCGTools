@@ -1,6 +1,10 @@
 """
-Converting lat-lon pairs into SMC grid i, j indexes.     JGLi14Feb2022 
-Add awk script output for selected area by first two lines  JGLi01Mar2022 
+##  Converting lat-lon pairs into SMC grid i, j indexes and add an awk script 
+##  output for selected area by first two lines.
+##
+##  First created:        JGLi01Mar2022 
+##  Last modified:        JGLi26Jun2025 
+##
 """
 
 def latlon2ijs( latlons, zlldll, kround=1 ):
@@ -28,7 +32,6 @@ def latlon2ijs( latlons, zlldll, kround=1 ):
     if(kround < 1): kround=1
     print(" i, j indexes will be rounded to nearest multiple of k =", kround )
 
-
     ijpairs=[]
 ##  Loop over all lat-lon paires and convert them into i, j
     for n in range(npairs):
@@ -41,8 +44,9 @@ def latlon2ijs( latlons, zlldll, kround=1 ):
 
 #   print( ijpairs )
 
-##  End of latlon2ijs conversion function.
     return ijpairs
+
+##  End of latlon2ijs conversion function.
 
 
 def main():
@@ -66,12 +70,14 @@ def main():
 
     print(" Read grid info from ", gridfile)
 
-##  Read cells with s by a procedure
-    zlldll = np.genfromtxt(gridfile, dtype=float, skip_header=1)
-    print(" Input file zlon zlat dlon dlat = \n", zlldll)
-
-##  Define SMC36125 zlon zlat dlon dlay array.
-#   zlldll=[0.0, 0.0, 0.0439453125, 0.029296875]
+##  Read grid information from gridfile.
+    with open( gridfile, 'r' ) as flhdl:
+## First line contains grid name and number of resolution levels.
+        nxlne = flhdl.readline()
+## Second line contains zlon zlat dlon dlat of size-1 cell parameters.
+        nxlne = flhdl.readline().split()
+        zdlnlt = np.array(nxlne, dtype=float)
+        print(" Input grid zlon zlat dlon dlat = \n", zdlnlt) 
 
 ##  Read lat-lon pairs from lat-lon_file (one pair per line). 
     print(" Read lat-lon pairs from ", ltlnfile)
@@ -79,7 +85,7 @@ def main():
     print( latlons )
 
 ##  Call conversion program.
-    ijpairs = latlon2ijs( latlons, zlldll, kround=kround )
+    ijpairs = latlon2ijs( latlons, zdlnlt, kround=kround )
 
 ##  Save converted i, j pairs along with xlon, ylat. 
     ltln_ijs = ltlnfile+"_ijs"
@@ -106,9 +112,10 @@ def main():
     print(" Cells in area of the first two lines could be selected with \n"+
           "   awk -f awktemp Cell_file > tempcels.dat "+"\n" )
 
-##  All done.
-
+##  End of main() function.
 
 if __name__ == '__main__':
     main()
+
+##  End of latlon2ijs.py program. 
 
