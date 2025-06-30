@@ -1,24 +1,8 @@
-!  This module is a common block similar in all AFT Model programs and is
-!  written in FORTRAN 90.
-!                     J G Li   26 Oct 2000
-!! Adapted for multiple cell 2D advection tests using UNO schemes.
-!!                    J G Li    8 Aug 2007
-!! Adapted for global multiple cell grid   J G Li   12 Nov 2007
-!! Modified for SMC extended over Arctic Ocean  J G Li   26 Nov 2008
-!! Adapted for multi-resolution UK3 to Global 25km grid  J G Li   8 Feb 2010 
-!! Modified to add minimum y-size in V-flux array.       J G Li  16 Feb 2010 
-!! Adapted for 6-25km global ocean SMC grid.  J G Li   22 Feb 2010
-!! Modified to use new rules on second cell selection.  J G Li   26 Feb 2010 
-!! Modified for SMC625 grid global part only.   J G Li   12 Dec 2011 
-!! Restore second cell selection by one face end equal.   JGLi28Feb2012 
-!! Modified to use new cell count line for SMC625 model.  JGLi01Oct2012 
-!! Adapted for SMC6125 grid with refined UK waters.   JGLi08Jan2013 
-!! Adapted for SMC36125 grid with 3 km UK coastlines.   JGLi25Feb2014 
-!! Adapted for SMC24816 grid with 2 km UK coastlines.   JGLi29Aug2014 
-!! Add OpenMP directives to speed up.   JGLi01Jul2015
-!! Adapted for SMC36125 grid model.   JGLi13Jul2015 
-!! Automated by using InpFile parameters.   JGLi19May2021 
-!! Allow quarterly cells across size-changing or merging lines. JGLi09Mar2023 
+!!
+!!  FORTRAN 90 program to generate face arrays for a given SMC grid. 
+!!
+!!  First created:        JGLi12Nov2007
+!!  Last modified:        JGLi05Feb2025
 !!
 
 MODULE Constants
@@ -96,7 +80,9 @@ END MODULE Constants
          WRITE(6,*)   NLon, NLat, NPol 
           READ(8,*)   CelFile
          WRITE(6,*)   CelFile
-          READ(8,*)   Arctic 
+!! Reset Arctic if any polar cell, default Arctic = .FALSE..
+       IF( NPol > 0 ) Arctic = .TRUE. 
+!         READ(8,*)   Arctic 
          WRITE(6,*)   Arctic 
 
       CLOSE(8)
