@@ -13,7 +13,7 @@
                  NLon, NLat, NPol, Init=0,  &
                  NTS,  NWP,  NHrg, NLrg
        REAL   :: ZLon, ZLat, DLon, DLat,  &
-                 DTG,  DT,   AKHM, CBFr,  &
+                 DFR0, DT,   AKHM, CBFr,  &
                  PLon, PLat, PAvr, Beta  
        LOGICAL:: Arctic, Source, WHPrts, Restrt
 
@@ -57,7 +57,7 @@
         &    CT0=273.16,CALJO=4.1868,PATM=101325.0, ANGUL=7.292E-5,  &
         &    EPSLN=0.6220, CLIGHT=2.99792458E8, Omega2=1.4584E-4,    &
         &    REARTH=6.37122E6, Agu36=4.8481E-5, Agu12d=6.0602E-6,    &
-        &    GmDT=0.0, DepMn=5.5, DFR0=0.2, DFHr=12.0  
+        &    GmDT=0.0, DepMn=5.5, DFHr=12.0  
 !!  GmDT is set to be zero and CBFr is moved as input variable.  JGLi21Mar2024
 
 !! Default integers for any loop count or temporary use. 

@@ -164,8 +164,8 @@
          WRITE(6,*)   NTS,  NWP,  NHrg, NLrg
           READ(8,*)   ZLon, ZLat, DLon, DLat
          WRITE(6,*)   ZLon, ZLat, DLon, DLat
-          READ(8,*)   DTG,  DT,   AKHM, CBFr
-         WRITE(6,*)   DTG,  DT,   AKHM, CBFr
+          READ(8,*)   DFR0, DT,   AKHM, CBFr
+         WRITE(6,*)   DFR0, DT,   AKHM, CBFr
           READ(8,*)   PLon, PLat, PAvr, Beta
          WRITE(6,*)   PLon, PLat, PAvr, Beta
           READ(8,*)   Arctic, Source, WHPrts, Restrt
@@ -173,6 +173,10 @@
 
        CLOSE(8)
  
+!!  Substitue DFR0 for unused DTG as input and rescale if it is > 1.0. 
+!!  It starts diffusion ramping with initial value of DFR0*AKHM.  JGLi16May2025
+       IF( DFR0 > 1.0 ) DFR0 = 1.0
+
 !!  Allocate cell and face arrays.
        ALLOCATE( ICE(4,-9:NCL), ISD(1:7,NFC), JSD(1:7,NFC), KG(NCL) )
        ALLOCATE( NRLCel(0:MRL), NRLUFc(0:MRL), NRLVFc(0:MRL) )
@@ -236,10 +240,8 @@
 !!  Convert diffusivity into radian^2 s-1 and multiply by 2*DT
 !!  The 2.0 factor is added to cancel the 0.5 factor in the gradient.
 !!  Ramp factor is introduced to reduce the diffusivity in early hours
-!!  with initial value at 0.4 times of the maximum one.  JGLi09Aug2024
+!!  with initial value at DFR0 times of the maximum one.  JGLi09Aug2024
         AKHDMX= 2.0*AKHM*DT/(REARTH*REARTH)
-!       AKHDT2= 0.4*AKHDMX 
-!!  Use new diffusivity initial ratio and increase time scale.  JGLi23Sep2024
         AKHDT2= DFR0*AKHDMX 
 
 !!  Allocate some working variables with MOLD option.
@@ -309,7 +311,7 @@
           CASE( 2 )
               CALL W2HfUCVC
           CASE( 3 )
-              CALL GsHfUCVC
+              CALL GsHfUCVC(3)
           CASE( 4 ) 
               CALL W5HfUCVC
           CASE( 5 ) 
@@ -321,6 +323,8 @@
               CALL WRITEOUT(A, 0, 'Ds')
           CASE( 8 )
               CALL TsunCanr
+          CASE( 9 )
+              CALL GsHfUCVC(0)
           CASE Default
               CALL INITUCVC
         END SELECT
@@ -342,10 +346,10 @@
 !  Relative vorticity and UV output
         CALL UVNTerpo
         CALL Vorticty
-!       A = (Vort - CoriF)/DT
-!       CALL WRITEOUT(A, NT, 'Vr')
+        A = (Vort - CoriF)/DT
+        CALL WRITEOUT(A, NT, 'Vr')
         CALL Integral(A, Vrint)
-!       CALL WRITEUVs(UC, VC, NT)
+        CALL WRITEUVs(UC, VC, NT)
         CALL Integral(Hw, Hwint)
 
 !  Save initial values for later use.
@@ -607,9 +611,11 @@
       & .OR. (MOD(NT,4*NWP) .eq. 0) )  THEN
             A = Hw +Btm 
             CALL WRITEOUT(A, NT, 'Hb')
-!  Relative vorticity output
-!           A = (Vort - CoriF)/DT
-!           CALL WRITEOUT(A, NT, 'Vr')
+!  Relative vorticity output for case 3
+            IF( Init .EQ. 3 .OR. Init .EQ. 9 ) THEN
+              A = (Vort - CoriF)/DT
+              CALL WRITEOUT(A, NT, 'Vr')
+            ENDIF
         ENDIF
 
 !  Save UC VC every 4 NWP times.

@@ -567,9 +567,10 @@
 
 
 !! Subroutine to initialise hw, corif, UC, VC for Galewsky etal (2004) test.
-      SUBROUTINE GsHfUCVC
+      SUBROUTINE GsHfUCVC(ICase)
         USE SWEsCnstMD
         IMPLICIT NONE
+        INTEGER, INTENT(IN):: ICase
         REAL:: CNST, CNST1, CNST2, CNST3, CNST4, CNST5, CNST6, CNST7
         REAL, ALLOCATABLE, DIMENSION(:)::  XLon, WLat, ELon, ELat, AnglD
         REAL ::  DfPolat, DfPolon
@@ -673,14 +674,17 @@
          CNST4 = 15.0*(WLAT(L)*D2RAD - Gsp2) 
          CNST6 = EXP(- CNST3*CNST3 - CNST4*CNST4 )
 
-!!  Initial U V components in unit m/s at cell centre local east.
+         IF( ICase > 0 ) THEN
+!!  Initial water height with disturbing field and Coriolis factor. 
+             HW(L)= Gshd + GsH(n) + GsPh*CCLat(n)*CNST6 
+         ELSE
+!!  Exclude disturbing field for steady flow test.  JGLi15May2025
+             HW(L)= Gshd + GsH(n)
+         ENDIF
+
+!!  Initial UC VC in unit m/s and Coriolis factor at cell centre local east.
          UC(L)= GsU(n)
          VC(L)= 0.0 
-
-!!  Initial water height with disturbing field and Coriolis factor 
-         HW(L)= Gshd + GsH(n) + GsPh*CCLat(n)*CNST6 
-!   Exclude disturbing field for steady flow test.  JGLi23Feb2017
-!        HW(L)= Gshd + GsH(n)
          CNST5=SIN(ELat(L)*D2RAD)
          CoriF(L) = Omega2*DT*CNST5
 
