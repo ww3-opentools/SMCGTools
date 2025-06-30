@@ -1,7 +1,0 @@
- SMC grid parameters for SMC61250 
- NLon, NLat= 4096, 3072 
- DLon, DLat= 0.087891, 0.058594 
- ZLon, ZLat= 0.000000, 0.000000 
- NRLv, MFct= 4, 8 
- Global, Arctic= True, True 
- End of SMC grid information. 
