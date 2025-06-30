@@ -2,5 +2,4 @@ SMC61250A
  260000   300000   4
    4096     3072   1
 '../DatGMC/SMC61250BArc.dat'
- .TRUE.
 
