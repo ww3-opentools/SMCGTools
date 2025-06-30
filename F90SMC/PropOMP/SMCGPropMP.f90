@@ -1,24 +1,9 @@
 !!
-!! Adapted for multiple cell 2D advection tests using UNO schemes.
-!!                    J G Li   26 Jul 2007
-!!
-!! Adapted for global multiple cell advection tests using UNO2 scheme.
-!!                    J G Li   22 Nov 2007
-!!
-!! Modified for global SMC grid extended to cover the N Pole.
-!!                    J G Li   26 Nov 2008
-!!
-!! Adapted for 2-part, 3-step, 3-resolution G6kSMC grid spectral transport.
-!!                    J G Li    5 Mar 2010
-!!
-!! Changed for global only SMC625 grid spectral transport.
-!!                    J G Li   12 Dec 2011
-!!
-!! Automatic setting of multi-resolution loops  with MRL and MRFct.
-!!                    J G Li   28 Feb 2014
-!!
-!! Adapted for SMCGTools as an independent SMC grid test model. 
-!!                    J G Li   12 Oct 2021
+!!  FORTRAN 90 propagation model for testing of SMC grid face arrays.
+!!  For single or two cores computer with OpenMP parallelization.  
+!! 
+!!  First created:        JGLi26Nov2008
+!!  Last modified:        JGLi05Feb2025
 !!
 
       PROGRAM SMCPropMP
@@ -1211,5 +1196,7 @@
       RETURN
 
       END SUBROUTINE WRITESWH
+!!
+!!  End of program SMCGPropMP.f90 file.
 !!
 
