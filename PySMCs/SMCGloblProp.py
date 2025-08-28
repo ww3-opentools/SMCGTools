@@ -3,7 +3,7 @@
 ##
 ## First created:    JGLi12Sept2005
 ## Converted into Python.    JGLi20Dec2018
-## Last modified:    JGLi29May2025
+## Last modified:    JGLi12Aug2025
 ##
 """
 
@@ -55,7 +55,8 @@ def main( ):
         nxlne = flhdl.readline().split()
         SWHdir=nxlne[0]
         OutDat=nxlne[1]
-        print(" SWH and Prop OutDat = \n", nxlne)
+        snhour=nxlne[2]
+        print(" SWHdir OutDat and nhr = \n", nxlne)
 
 ## Read the cell array and Arctic part if any.
     Cel_file = [ DatGMC+Gname+'Cels.dat' ]
@@ -160,8 +161,8 @@ def main( ):
     xt=-1.0
     yt=-1.0
 
-## Specify number of steps per hour (DTG = 900 s)
-    nhr=4
+## Specify number of steps per hour from GridInfo file.
+    nhr= int(snhour)
     vunit='SWH m'
 
 ## Read in cell concentration data files from a list file
@@ -189,6 +190,7 @@ def main( ):
 
         txtary=[ ['SWHmn='+swhmnx[0], 'b', fntsa],
                  ['SWHmx='+swhmnx[1], 'r', fntsa],
+                 [ thrs,              'k', fntsa],
                  [ Gname+' SWH m',    'r', fntsb] ]
 
 ## Call function to draw the swh plot.
@@ -217,14 +219,14 @@ def main( ):
                 ax2.plot([x1, xs[i]], [y1, ys[i]], 'r-', linewidth=1)
 
 ## Put statistic information inside subplot ax2
-            ax2.text(sztpxy[2], -sztpxy[3]-0.9, txtary[2][0],
+            ax2.text(sztpxy[2], -sztpxy[3]-0.9, txtary[3][0],
                 horizontalalignment='center', fontsize=fntsb, color='r')
 
-            xydxdy=[sztpxy[2], sztpxy[3]+0.5, 0.0, 0.6]
-            addtexts(ax2, xydxdy, txtary[0:2])
+            xydxdy=[sztpxy[2], sztpxy[3], 0.0, 0.6]
+            addtexts(ax2, xydxdy, txtary[0:3])
 
-            plt.subplots_adjust(left=0.01, bottom=0.01, right=0.99, 
-                                 top=0.99, wspace=0.01, hspace=0.01)
+            plt.subplots_adjust(left=0.01, bottom=0.00, right=0.99, 
+                                 top=1.00, wspace=0.01, hspace=0.0)
 
         elif( pltype == 'Regular'):
 

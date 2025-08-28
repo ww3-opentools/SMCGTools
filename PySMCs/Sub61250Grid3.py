@@ -97,7 +97,7 @@ def main():
         plon= 0.0
         plat= 23.5
         clrbxy=[ -9.6,-12.0, 19.0,  1.0]
-        sztpxy=[ 16.0,  9.0,-10.2,-10.3]
+        sztpxy=[ 16.0,  9.0,-10.2, -9.8]
         rngsxy=[-10.0, 10.0,-12.1, 10.0]
 
 ## Radius, projection angle, and pole lon-lat.
@@ -277,7 +277,7 @@ def main():
         smcgrids(ax2, cel, svrts,scels,colrs, config, Arctic=False, 
                  nmark=nsmrk[1], buoys=spbuofl, hemis=-1.0)
 
-        xydxdy=[-10.2, -9.8,  0.0,  0.6]
+        xydxdy=[sztpxy[2], sztpxy[3], 0.0, 0.6]
         txtary=[ [ModlName+' Grid',  'k', fntsb],
                  ['NC='+str(nc),     'b', fntsa],
                  ['NA='+str(na),     'b', fntsa],

@@ -133,7 +133,7 @@ def main():
 
     if( pltype == 'EuroArc'):
 ## Euro-Arctic regional plot
-        pangle=27.5 
+        pangle=28.0 
         plon=  0.0
         plat= 69.0
         clrbxy=[  8.0, -4.5,   0.8,  7.0]
