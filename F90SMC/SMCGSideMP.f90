@@ -2,7 +2,7 @@
 !!  FORTRAN 90 program to generate face arrays for a given SMC grid. 
 !!
 !!  First created:        JGLi12Nov2007
-!!  Last modified:        JGLi05Feb2025
+!!  Last modified:        JGLi28Aug2025
 !!
 
 MODULE Constants
@@ -188,22 +188,31 @@ END MODULE Constants
       WRITE(6,*) " Start creating inner face ..."
 
 !     Generate i & j inter-sides for all cells at the highest level
-!     Separate i & j faces into 2 sections for OpenMP parallel 
+!     Separate i & j faces into 2 sections for OpenMP parallelisation. 
+
+!     Reset system variable OMP_NUM_THREADS if not equal 2.   JGLi28Aug2025 
+!$    CALL OMP_SET_NUM_THREADS(2)
 
 !     Start parallel sessions and setup threads.
 
 !$OMP Parallel
 
-!$    CALL OMP_SET_NUM_THREADS(2)
 !$    WRITE(6,*) "Num_Threads =",  omp_get_num_threads()
 
+!!    Non-shared and fixed variables.
       II=0
       JJ=0
       NCP = NC
       IF( Arctic ) NCP = NC-NPol 
+
+!$OMP Barrier
+!!    Set this bariier to ensure fixed variables are defined.
+
+!$OMP Sections  Private(K, KL, L, LM, M, MN, N) 
+
       DO L=1, NCP
 
-         IF(MOD(L, 5000) .eq. 0) WRITE(6,*) " Done L, II, JJ =", L, II, JJ
+         IF(MOD(L, 5000) .eq. 0) WRITE(6,*) " Done L, II =", L, II
 
 !!  Cyclic boundary for i-side at L-cell east side
          LM=ICE(1,L)+ICE(3,L)
@@ -212,10 +221,6 @@ END MODULE Constants
 !!  Cell height size is different from width size sometimes
          KL=ICE(2,L)+ICE(4,L)
 
-!$OMP Barrier
-!!    Set this bariier to ensure LM and KL are set before sections start.
-
-!$OMP Sections  Private(M, N) 
          DO M=1, NCP
 
 !!  U-faces
@@ -247,58 +252,68 @@ END MODULE Constants
             ENDIF
          END DO
 
+!!    End of L-Loop
+      END DO
+
 !$OMP Section
+
+      DO K=1, NCP
+
+         IF(MOD(K, 5000) .eq. 0) WRITE(6,*) " Done K, JJ =", K, JJ
+
+!!  K-cell north side for V-face position.
+         MN=ICE(2,K)+ICE(4,K)
+
          DO N=1, NCP
 
 !!   V-faces
-            IF( ICE(2,N) .eq. KL ) THEN 
-                IF( ICE(3,L) <= ICE(3,N) ) THEN  
-!!  L cell no larger than N cell, x range should be within N cell one.
-                    IF( ICE(1,L) >= ICE(1,N) .AND.   &
-                        ICE(1,L)+ICE(3,L) <= ICE(1,N)+ICE(3,N) ) THEN
+            IF( ICE(2,N) .eq. MN ) THEN 
+                IF( ICE(3,K) <= ICE(3,N) ) THEN  
+!!  K cell no larger than N cell, x range should be within N cell one.
+                    IF( ICE(1,K) >= ICE(1,N) .AND.   &
+                        ICE(1,K)+ICE(3,K) <= ICE(1,N)+ICE(3,N) ) THEN
                         JJ=JJ+1
-                        JSD(1,JJ)=ICE(1,L)
-                        JSD(2,JJ)=KL 
-                        JSD(3,JJ)=ICE(3,L)
-                        JSD(5,JJ)=L
+                        JSD(1,JJ)=ICE(1,K)
+                        JSD(2,JJ)=MN 
+                        JSD(3,JJ)=ICE(3,K)
+                        JSD(5,JJ)=K
                         JSD(6,JJ)=N
 !!  Minimum Y-size of the two bounding cells will be used to sort 
 !!  cell sizes for multi-step implementation.
-                        JSD(8,JJ)=MIN(ICE(4,N), ICE(4,L)) 
+                        JSD(8,JJ)=MIN(ICE(4,N), ICE(4,K)) 
                     ENDIF
                 ELSE
-!!  L cell smaller than N cell, x range should be within L cell one.
-                    IF( ICE(1,L) <= ICE(1,N) .AND.   &
-                        ICE(1,L)+ICE(3,L) >= ICE(1,N)+ICE(3,N) ) THEN
+!!  K cell larger than N cell, x range should be within K cell one.
+                    IF( ICE(1,K) <= ICE(1,N) .AND.   &
+                        ICE(1,K)+ICE(3,K) >= ICE(1,N)+ICE(3,N) ) THEN
                         JJ=JJ+1
                         JSD(1,JJ)=ICE(1,N)
-                        JSD(2,JJ)=KL
+                        JSD(2,JJ)=MN
                         JSD(3,JJ)=ICE(3,N)
-                        JSD(5,JJ)=L
+                        JSD(5,JJ)=K
                         JSD(6,JJ)=N 
 !!  Minimum Y-size of the two bounding cells will be used to sort 
 !!  cell sizes for multi-step implementation.
-                        JSD(8,JJ)=MIN(ICE(4,N), ICE(4,L)) 
+                        JSD(8,JJ)=MIN(ICE(4,N), ICE(4,K)) 
                     ENDIF
                 ENDIF
             ENDIF
          END DO
 
+!!    End of K-Loop
+      END DO
+
 !$OMP End Sections
 
 !$OMP Barrier
-!!    Set this bariier to ensure both U and V face M-loop finished. 
+!!    Set this bariier to ensure both U and V face M/N-loop finished. 
 
-!!    End of L-Loop
-      END DO
-
- 
       ijk=II
       lmn=JJ
 
 !$OMP Barrier
 
-!$OMP Sections  Private(i, j, ij, k, n, kk, LM, MN)
+!$OMP Sections  Private(i, j, ij, K, kk, L, M, N, LM, MN)
 
 !     Set boundary u faces
       WRITE(6,*) " Start creating u boundary face II =", II
@@ -433,12 +448,12 @@ END MODULE Constants
       WRITE(6,*) " Start creating v boundary face JJ=", JJ
 
 !!    Loop over all cells
-      DO L=1, NCP
+      DO N=1, NCP
 
-         IF(MOD(L, 10000) .eq. 0) WRITE(6,*) " Done L JJ=", L, JJ
+         IF(MOD(N, 10000) .eq. 0) WRITE(6,*) " Done N JJ=", N, JJ
 
-!!    Allocate two arrays to mark L-cell j-side lengths.
-         MN=ICE(3,L)
+!!    Allocate two arrays to mark N-cell j-side lengths.
+         MN=ICE(3,N)
          JSoth=0
          JNoth=0
          ij=0
@@ -447,22 +462,22 @@ END MODULE Constants
 !!    Loop through all V faces already set 
          DO M=1, lmn
 
-!!    See if the L cell south face is covered
-            IF( JSD(2,M) .eq. ICE(2,L) ) THEN
-                IF( JSD(1,M)          >= ICE(1,L) .AND.  & 
-                    JSD(1,M)+JSD(3,M) <= ICE(1,L)+ICE(3,L) ) THEN
-                    i= JSD(1,M) - ICE(1,L) + 1
+!!    See if the N cell south face is covered
+            IF( JSD(2,M) .eq. ICE(2,N) ) THEN
+                IF( JSD(1,M)          >= ICE(1,N) .AND.  & 
+                    JSD(1,M)+JSD(3,M) <= ICE(1,N)+ICE(3,N) ) THEN
+                    i= JSD(1,M) - ICE(1,N) + 1
                     j= JSD(3,M) - 1
                     JSoth(i:i+j)=1
                     ij=ij+JSD(3,M)
                 ENDIF
             ENDIF
 
-!!    and see if the L cell north face is covered
-            IF( JSD(2,M) .eq. ICE(2,L) + ICE(4,L) )  THEN 
-                IF( JSD(1,M)          >= ICE(1,L) .AND.  & 
-                    JSD(1,M)+JSD(3,M) <= ICE(1,L)+ICE(3,L) ) THEN
-                    i= JSD(1,M) - ICE(1,L) + 1
+!!    and see if the N cell north face is covered
+            IF( JSD(2,M) .eq. ICE(2,N) + ICE(4,N) )  THEN 
+                IF( JSD(1,M)          >= ICE(1,N) .AND.  & 
+                    JSD(1,M)+JSD(3,M) <= ICE(1,N)+ICE(3,N) ) THEN
+                    i= JSD(1,M) - ICE(1,N) + 1
                     j= JSD(3,M) - 1
                     JNoth(i:i+j)=1
                     kk=kk+JSD(3,M)
@@ -472,45 +487,45 @@ END MODULE Constants
 !!  End of inner face M=1,lmn loop
          END DO
 
-         IF( kk+ij .gt. 2*ICE(3,L) )  WRITE(6,*)  "Over done j-side for L, ij, nn=", L, ij, kk
-         IF( kk+ij .ge. 2*ICE(3,L) )  CYCLE !! Go to check next cell L
+         IF( kk+ij .gt. 2*ICE(3,N) )  WRITE(6,*)  "Over done j-side for N, ij, nn=", N, ij, kk
+         IF( kk+ij .ge. 2*ICE(3,N) )  CYCLE !! Go to check next cell N
 
          IF( ij .eq. 0)  THEN
 !!  Full boundary cell for south side
              JJ=JJ+1
-             JSD(1,JJ)=ICE(1,L)
-             JSD(2,JJ)=ICE(2,L)
-             JSD(3,JJ)=ICE(3,L)
+             JSD(1,JJ)=ICE(1,N)
+             JSD(2,JJ)=ICE(2,N)
+             JSD(3,JJ)=ICE(3,N)
 !!  Add faces to the south polar cell if NSouth > 0. 
-             IF( (NSouth > 0) .AND. (ICE(2,NSouth)+ICE(4,NSouth) .eq. ICE(2,L)) ) THEN
+             IF( (NSouth > 0) .AND. (ICE(2,NSouth)+ICE(4,NSouth) .eq. ICE(2,N)) ) THEN
                  JSD(5,JJ)=NSouth
-                 WRITE(6,*) "Set south pole v face for cell L", L
+                 WRITE(6,*) "Set south pole v face for cell N", N
              ELSE
 !!  New boundary cells proportional to cell sizes 
 !!  Updated for any 2**n sizes
-                 JSD(5,JJ)=-INT( LOG(FLOAT(ICE(3,L)))/LOG(2.) + 0.01 )
+                 JSD(5,JJ)=-INT( LOG(FLOAT(ICE(3,N)))/LOG(2.) + 0.01 )
              ENDIF
-             JSD(6,JJ)=L
-             JSD(8,JJ)=ICE(4,L)
+             JSD(6,JJ)=N
+             JSD(8,JJ)=ICE(4,N)
          ENDIF
 
          IF( kk .eq. 0)  THEN
 !!  Full boundary cell for north side
              JJ=JJ+1
-             JSD(1,JJ)=ICE(1,L)
-             JSD(2,JJ)=ICE(2,L)+ICE(4,L)
-             JSD(3,JJ)=ICE(3,L)
-             JSD(5,JJ)=L
+             JSD(1,JJ)=ICE(1,N)
+             JSD(2,JJ)=ICE(2,N)+ICE(4,N)
+             JSD(3,JJ)=ICE(3,N)
+             JSD(5,JJ)=N
 !!  North polar cell takes the whole last 4 rows above JSD=ICE(2,NNorth).
-!!  Note ICE(2,L) represents cell lower-side.  N polar cell is the NNorth cell.
-             IF( (NNorth > 0) .AND. (ICE(2,L)+ICE(4,L) .eq. ICE(2,NNorth)) ) THEN
+!!  Note ICE(2,N) represents cell lower-side.  N polar cell is the NNorth cell.
+             IF( (NNorth > 0) .AND. (ICE(2,N)+ICE(4,N) .eq. ICE(2,NNorth)) ) THEN
                  JSD(6,JJ)=NNorth
-                 WRITE(6,*) "Set north pole v face for cell L", L
+                 WRITE(6,*) "Set north pole v face for cell N", N
              ELSE
 !!  Updated for any 2**n sizes
-                 JSD(6,JJ)=-INT( LOG(FLOAT(ICE(3,L)))/LOG(2.) + 0.01 )
+                 JSD(6,JJ)=-INT( LOG(FLOAT(ICE(3,N)))/LOG(2.) + 0.01 )
              ENDIF
-             JSD(8,JJ)=ICE(4,L)
+             JSD(8,JJ)=ICE(4,N)
          ENDIF
   
          IF( ij .gt. 0  .AND. ij .lt. MN )  THEN
@@ -526,14 +541,14 @@ END MODULE Constants
                      ENDDO
 !!  Add a j-sized boundary cell
                      JJ=JJ+1
-                     JSD(1,JJ)=ICE(1,L) + i
-                     JSD(2,JJ)=ICE(2,L)
+                     JSD(1,JJ)=ICE(1,N) + i
+                     JSD(2,JJ)=ICE(2,N)
                      JSD(3,JJ)=j 
 !!  New boundary cells proportional to cell sizes 
 !!  Updated for any 2**n sizes
                      JSD(5,JJ)=-INT( LOG(FLOAT(JSD(3,JJ)))/LOG(2.) + 0.01 )
-                     JSD(6,JJ)=L
-                     JSD(8,JJ)=ICE(4,L)
+                     JSD(6,JJ)=N
+                     JSD(8,JJ)=ICE(4,N)
                      i = i + j 
                  ENDIF
              END DO
@@ -552,20 +567,20 @@ END MODULE Constants
                      ENDDO
 !!  Add a j-sized boundary cell
                      JJ=JJ+1
-                     JSD(1,JJ)=ICE(1,L) + i
-                     JSD(2,JJ)=ICE(2,L) + ICE(4,L)
+                     JSD(1,JJ)=ICE(1,N) + i
+                     JSD(2,JJ)=ICE(2,N) + ICE(4,N)
                      JSD(3,JJ)=j 
-                     JSD(5,JJ)=L
+                     JSD(5,JJ)=N
 !!  New boundary cells proportional to cell sizes 
 !!  Updated for any 2**n sizes
                      JSD(6,JJ)=-INT( LOG(FLOAT(JSD(3,JJ)))/LOG(2.) + 0.01 )
-                     JSD(8,JJ)=ICE(4,L)
+                     JSD(8,JJ)=ICE(4,N)
                      i = i + j 
                  ENDIF
              END DO
          ENDIF
 
-!!   End of L-loop
+!!   End of N-loop
       ENDDO
 
 !$OMP End Sections
@@ -575,7 +590,7 @@ END MODULE Constants
       NU=II
       NV=JJ
 
-!$OMP Sections Private(L, M, kk, nn)
+!$OMP Sections Private(i, j, k, L, M, n, kk, nn)
 
 !!  Loop over all u faces to find the second cells next to the L and M cells
 !!  Boundary cells will be duplicated for second cells
@@ -706,7 +721,7 @@ END MODULE Constants
       ij=0
       mn=0
 
-!$OMP Sections Private(L, M)
+!$OMP Sections Private(i, j, k, L, M)
 
 !!  Check whether any overlaping exists
       WRITE(6,*) " Check any U-face overlaping NU = ", NU
