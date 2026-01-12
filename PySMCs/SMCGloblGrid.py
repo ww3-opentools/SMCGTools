@@ -109,7 +109,7 @@ def main():
 ## Possible selection of your plot types. 
     gorloc={0:'Global', 1:'EuroArc',2:'Atlntic',3:'Pacific',4:'Regular', \
             5:'AtlHemi',6:'PacHemi',7:'IndianO',8:'Meditrn',9:'JapanPc', \
-            11:'GtLkes'}
+            11:'GtLkes',12:'RtdArc'}
 
 ## Prompt selection choices and ask for one input
     print (" \n ", gorloc)
@@ -174,6 +174,15 @@ def main():
         clrbxy=[  2.0,  6.0,   9.0,  0.8]
         sztpxy=[ 15.0, 10.0, -11.0, -3.0]
         rngsxy=[-15.0, 15.0, -10.0, 10.0]
+
+    if( pltype == 'RtdArc'):
+## Great Lakes regional plot
+        pangle= 28.00 
+        plon= 315.0
+        plat=  80.1
+        clrbxy=[ 10.0, 1.0,  0.8,  9.0]
+        sztpxy=[ 10.0, 10.0, 5.0, 10.0]
+        rngsxy=[ -9.0, 12.0,-10.3,10.6]
 
     if( pltype == 'Pacific'):
 ## West Pacific regional plot
@@ -277,7 +286,7 @@ def main():
 
         xydxdy=[sztpxy[2],sztpxy[3], 0.0, 0.6]
         addtexts(ax2, xydxdy, txtary)
-        plt.subplots_adjust(left=0.01, bottom=0.0, right=0.99, 
+        plt.subplots_adjust(left=0.005, bottom=0.0, right=0.995, 
                              top=1.0, wspace=0.01, hspace=0.0)
 
     elif( pltype == 'PacHemi' or pltype == 'IndianO'):

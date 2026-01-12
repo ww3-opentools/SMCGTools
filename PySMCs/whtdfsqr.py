@@ -2,7 +2,7 @@
 ## Function to convert WHt difference with square root scales. 
 ## 
 ## First created:    JGLi18Nov2019
-## Last modified:    JGLi26May2025
+## Last modified:    JGLi16Nov2025
 ## 
 """
 
@@ -36,9 +36,10 @@ def whtdfsqr(whts, whtdif, nclrm=256, nczro=111):
     idxmin=list(whts).index(cmin)
 
     print ( ' whdif ranges %f, %f' % (cmin, cmax) )
-    print ( ' min/max cell %d, %d' % (idxmin, idxmax) )
-    whdmnx =[ f'{cmin:10.3E}', f'{cmax:.3f}', \
-              f'{idxmin:d}',   f'{idxmax:d}' ]
+#   print ( ' min/max cell %d, %d' % (idxmin, idxmax) )
+#   whdmnx =[ f'{cmin:10.3E}', f'{cmax:.3f}', \
+    whdmnx =[ f'{cmin:.4f}', f'{cmax:.4f}', \
+              f'{idxmin:d}', f'{idxmax:d}' ]
 
 ## Convert array into sqrt of its original magnitude, keeping sign.
     whtsgn= np.sign(whts)

@@ -3,26 +3,30 @@
 ##
 ## First created:    JGLi30Jun2011
 ## Converted into Python.    JGLi20Dec2018
-## Last modified:    JGLi06Jun2025
+## Last modified:    JGLi25Nov2025
 ##
 """
 
-def main(): 
-
 ## Import relevant modules and functions
-    import sys
-    import numpy as np
-    import pandas as pd
-    import matplotlib.pyplot as plt
+import gc
+import os
+import sys
+import psutil
+import numpy as np
+import pandas as pd
 
-    from datetime import datetime, timedelta
+## Only import Figure, no longer use pyplot.  JGLi05Nov2025
+from matplotlib.figure import Figure
 
-    from readtext import readtext
-    from readcell import readcell
-    from rgbcolor import rgbcolor
-    from smcswhcv import smcswhcv 
-    from smcfield import smcfield 
-    from addtexts import addtexts 
+from datetime import datetime
+from readtext import readtext
+from readcell import readcell
+from rgbcolor import rgbcolor
+from smcswhcv import smcswhcv
+from smcfield import smcfield
+from addtexts import addtexts
+
+def main(): 
 
 ## Check input information file name if provided.
     print(sys.argv)
@@ -93,24 +97,26 @@ def main():
     timdx = pd.date_range(start=start, end=endat, freq=strend[2])
 
 ## Possible selection of your plot types. 
-    gorloc={0:'Global',1:'EuroArc',2:'Pacific',3:'Regular'}
+    gorloc={0:'Global', 1:'EuroArc',2:'Atlntic',3:'Pacific',4:'Regular', \
+            5:'AtlHemi',6:'PacHemi',7:'IndianO',8:'Meditrn',9:'JapanPc', \
+            11:'GtLkes',12:'RtdArc'}
 
 ## Prompt selection choices and ask for one input
     print (" \n ", gorloc)
     instr = input("\n *** Please enter your selected number here > ")
     m = int(instr)
-    pltype=gorloc.get(m, 'Invalid_selection')
-    if( pltype == 'Invalid_selection' ): 
+    ptype=gorloc.get(m, 'Invalid_selection')
+    if( ptype == 'Invalid_selection' ): 
         print ("Invalid selection, program terminated.")
         exit()
 
-    print (" Draw SWH plots "+pltype)
+    print (" Draw SWH plots "+ptype)
 
 ## Choose global or local verts from different files.
-    vrfile = DatGMC+Gname+'Vrts'+pltype[0:4]+'.npz'
+    vrfile = DatGMC+Gname+'Vrts'+ptype[0:4]+'.npz'
     vrtcls = np.load( vrfile )
 
-    if( pltype == 'Global' ):
+    if( ptype == 'Global' ):
         nvrts = vrtcls['nvrt'] ; ncels = vrtcls['ncel']
         svrts = vrtcls['svrt'] ; scels = vrtcls['scel']
         config = vrtcls['cnfg']
@@ -121,7 +127,7 @@ def main():
         config = vrtcls['cnfg']
         print (' nvrts, ncels and config read ') 
 
-    if( pltype == 'Regular' ):
+    if( ptype == 'Regular' ):
         from smcfrglr import smcfrglr
 
 ## Selected plot configuration parameters.
@@ -139,8 +145,8 @@ def main():
 ## Use ijk to count how many times to draw.
     ijk=0
     for dt in timdx:
+        swh2d = swhs = None
         swhfl = SWHdir + dt.strftime('%y%m%d%H') + '.hs'
-
         hdlist, swh2d = readtext(swhfl)
         mc = int(hdlist[4])
         swhs = swh2d.flatten()[0:mc]
@@ -164,10 +170,10 @@ def main():
                  [datms,     'k', fntsb] ] 
 
 ## Call function to draw the swh plot.
-        epsfl = Wrkdir + 'swh' + pltype[0:4]+dt.strftime('%y%m%d%H') + '.eps'
-        if( pltype == 'Global' ):
+        epsfl = Wrkdir + 'swh' + ptype[0:4]+dt.strftime('%y%m%d%H') + '.eps'
+        if( ptype == 'Global' ):
 ## Set up first subplot and axis for northern hemisphere
-            fig=plt.figure(figsize=sztpxy[0:2])
+            fig=Figure(figsize=sztpxy[0:2])
             ax1=fig.add_subplot(1,2,1)
 
 ## Draw SWH field on northern heimisphere panel.
@@ -185,12 +191,13 @@ def main():
             xydxdy=[sztpxy[2], sztpxy[3], 0.0, 0.6]
             addtexts(ax2, xydxdy, txtary[1:])
 
-            plt.subplots_adjust(left=0.01, bottom=0.0, right=0.99, 
+            fig.subplots_adjust(left=0.005, bottom=0.0, right=0.995, 
                                  top=1.0, wspace=0.01, hspace=0.0)
 
-        elif( pltype == 'Regular' ):
+        elif( ptype == 'Regular' ):
 ## Draw field as regular grid box format.
-            fig, ax = plt.subplots(figsize=sztpxy[0:2])
+            fig=Figure(figsize=sztpxy[0:2])
+            ax = fig.subplots()
 
             smcfrglr(ax, nswh, nvrts, ncels, colrs, config,
                      vscle=swhscl, vunit='SWH m') 
@@ -199,12 +206,13 @@ def main():
             tpy= rngsxy[2]+1.0
             ax.text(tpx, tpy, Gname+' SWHmn='+swhmnx[0]+' SWHmx='+swhmnx[1]+' at '+datms,
                 horizontalalignment='center', fontsize=fntsa, color='k')
-            plt.subplots_adjust(left=0.03, bottom=0.04, \
+            fig.subplots_adjust(left=0.03, bottom=0.04, \
                            right=0.99, top=0.98)
 
         else:
 ## Draw other regional plots.
-            fig, ax = plt.subplots(figsize=sztpxy[0:2])
+            fig=Figure(figsize=sztpxy[0:2])
+            ax = fig.subplots()
 
             smcfield(ax, nswh, nvrts, ncels, colrs, config,
                      vscle=swhscl, vunit='SWH m')
@@ -212,17 +220,24 @@ def main():
 ## Put statistic information inside plot ax.
             xydxdy=[sztpxy[2], sztpxy[3]-0.5, 0.0, -0.6]
             addtexts(ax, xydxdy, txtary)
-            plt.subplots_adjust(left=0.0,bottom=0.0,right=1.0,top=1.0)
+            fig.subplots_adjust(left=0.0,bottom=0.0,right=1.0,top=1.0)
 
-## Save plot and close figure plt.
+## Save plot and clear figure contents.
         print(" ... Saving plot as", epsfl )
-        plt.savefig(epsfl, dpi=None,facecolor='w',edgecolor='w', 
+        fig.savefig(epsfl, dpi=None,facecolor='w',edgecolor='w', 
             orientation='portrait')
-        plt.close()
+
+## Close figure and clear memory following Yaswant Pradhan's suggestions.
+        fig.clear()       # Clear figure contents.
+        gc.collect()      # Gabbage collection call.
+
+        # Print memory usage for diagnosis
+        process = psutil.Process(os.getpid())
+        memorys = f" Memory usage {process.memory_info().rss /(1024*1024):.2f} MB"
 
 ## Increase ijk for next plot
         ijk += 1
-        print (" Finish plot No.", ijk," at ", datetime.now())
+        print (" Finish plot ", ijk," at ", datetime.now(), memorys)
 
 ## End of date loop
 

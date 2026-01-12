@@ -1,17 +1,23 @@
 """
-## Program to draw the AMM 1.5-3 km SMC grid and mark boundary and dry cells.
 ##
-## First created:    JGLi06Jul2023
-## Last modified:    JGLi18Jun2025
+##  It reads cell files and uses own projection to draw 
+##  the SMC grid. Projected polygons are collected into 
+##  vert variables for grid and subsequent swh plots. 
+##
+##  First created:    JGLi26Nov2008
+##  Converted into a Python function.     JGLi05Dec2018
+##  Modified for AMM153km grid plot.      JGLi06Jul2023
+##  Last modified:    JGLi30Oct2025
 ##
 """
 
 def main():
 
 ## Import relevant modules and functions
+    import sys
     import numpy as np
-    import matplotlib.pyplot as plt
 
+    from matplotlib.figure import Figure
     from datetime import datetime
     from readcell import readcell   
     from rgbcolor import rgbcolor
@@ -23,14 +29,46 @@ def main():
 
     print( " Program started at %s " % datetime.now().strftime('%F %H:%M:%S') )
 
-## Read regional grid cell array.
-    MyCode='/home/users/jianguo.li/Python/MyCodes/'
-    Wrkdir='/data/users/jianguo.li/Bathy/AMM15Wave/'
-    DatSMC=Wrkdir+'DatSMC/'
-    GridNm='AMM153km'
-    Cel_file=DatSMC+GridNm+'Cels.dat'
-    Bndyfile=DatSMC+GridNm+'Bdys.dat'
-    Dry_file=DatSMC+GridNm+'Drys.dat'
+## Check input information file name if provided.
+    print(sys.argv)
+    if( len(sys.argv) > 1 ):
+        if( len(sys.argv[1]) > 3 ):
+            gridfile = sys.argv[1]
+    else:
+        gridfile = 'GridInfoAMM153.txt'
+
+## Read global grid information file. 
+    with open( gridfile, 'r' ) as flhdl:
+## First line contains grid name and number of resolution levels.
+        nxlne = flhdl.readline().split()
+        Gname = nxlne[0]
+        Level = int(nxlne[1])
+        print(" Input grid name and number of levl= ", Gname, Level)
+## Second line contains zlon zlat dlon dlat of size-1 cell parameters.
+        nxlne = flhdl.readline().split()
+        zdlnlt = np.array(nxlne, dtype=float)
+        print(" Input grid zlon zlat dlon dlat = \n", zdlnlt) 
+## Third line is the working directory and cell array subdirectory.
+        nxlne = flhdl.readline().split()
+        Wrkdir=nxlne[0]
+        DatGMC=nxlne[1]
+        MCodes=nxlne[2]
+        print(" Wrkdir, DatGMC and MCodes = \n", nxlne) 
+## Forth line starts with the number of polar cells.
+        nxlne = flhdl.readline().split()
+        npl = int(nxlne[0])
+        print(" Number of polar cells = ", npl) 
+## Final line stores the rotated polon and polat values.
+        nxlne = flhdl.readline().split()
+        Polon = float(nxlne[0])
+        Polat = float(nxlne[1])
+        print(" Rotated N Polon Polat = ", Polon, Polat) 
+## End of reading grid information file.
+
+## Read global and Arctic part cells. 
+    Cel_file=DatGMC+Gname+'Cels.dat'
+    Bndyfile=DatGMC+Gname+'Bdys.dat'
+    Dry_file=DatGMC+Gname+'Drys.dat'
 
     headrs, cel = readcell( [Cel_file] ) 
     numbrs=headrs[0].split()
@@ -39,12 +77,10 @@ def main():
     n2 = int( numbrs[2] )
     print( numbrs )
 
-## No Arctic part so set na nb to be zero.
-    Arctic = False
     na = nb = 0
     nc = ng + na
-    print( GridNm+' total cell number = %d' % nc )
-    print( GridNm+' N1 and N2 numbers = %d, %d' % (n1,n2) )
+    print( Gname+' total cell number = %d' % nc )
+    print( Gname+' N1 and N2 numbers = %d, %d' % (n1,n2) )
 
 ## Find out cell covered range.
     ic0=cel[:,0]; ic2=cel[:,2]
@@ -59,51 +95,37 @@ def main():
 ## Read grid boudnary cell array.
     headrs, bcel = readcell( [Bndyfile] )
     nbdy = int( headrs[0].split()[0] )
-    print( GridNm+' bdy cell number = %d' % nbdy )
+    print( Gname+' bdy cell number = %d' % nbdy )
 
 ## Read dry (depth <= 0) cell array.
     headrs, dcel = readcell( [Dry_file] )
     ndry = int( headrs[0].split()[0] )
-    print( GridNm+' dry cell number = %d' % ndry )
+    print( Gname+' dry cell number = %d' % ndry )
 
 ## Append dry cells to boundary cell list.
     bdcel = np.vstack( (bcel, dcel) )
     print(" Merged boundary and dry cell array shape ", bdcel.shape)
 
-## Size-1 cell increments
-    dxlon=0.0135; dylat=0.0135
-
-## Reference or i=j=0 point lon lat.
-    zrlon=-10.89625
-    zrlat= -7.30095
-
-## Rotated pole lat-lon for AMM15 grid.
-    Polon = 177.5
-    Polat = 37.5
-
-## Grid related parameters
-    zdlnlt = [zrlon, zrlat, dxlon, dylat]
-
 ## Initial txtary list as [txt, colr, fontsize].
-    fntsz = 10.0
-    fntsa = 1.2*fntsz
-    fntsb = 1.5*fntsz
+    fntsz = 12.0
+    fntsa = 1.25*fntsz
+    fntsb = 1.50*fntsz
 
-    txtary = [ [GridNm+' Grid',   'k', fntsb],
-               ['NCel='+str(nc),  'b', fntsa],  
-               ['NBdy='+str(nbdy),'r', fntsa],  
-               ['NDry='+str(ndry),'r', fntsa] ] 
+    txtary = [ [Gname+' Grid', 'k', fntsb],
+               ['NC='+str(nc), 'r', fntsa],  
+               ['NBdy='+str(nbdy), 'r', fntsa], 
+               ['NDry='+str(ndry), 'r', fntsa] ] 
 
 ## Use own color map and defined depth colors 
-    colrfile = MyCode+'rgbspectrum.dat'
+    colrfile = MCodes+'rgbspectrum.dat'
     colrs = rgbcolor( colrfile )
 
 ## Maximum mapping radius.
     radius=10.0
 
-    print (" Draw SMC grid for "+GridNm)
+    print (" Draw SMC grid for "+Gname)
 
-##  European regional plot
+## European regional plot
     pangle=9.5 
     plon= -1.0
     plat=  2.0
@@ -120,31 +142,30 @@ def main():
 ## Find boundary cell ids for the sub-grid.
     nbdry = smcids(bdcel, cel)
     ncbdy = nbdry[0:nbdy]
-    print(GridNm+" len(nbdry), len(ncbdy) and nbdy =", \
-                   len(nbdry), len(ncbdy),    nbdy)
+    print(" len(nbdry), len(ncbdy), nbdy =", len(nbdry), len(ncbdy), nbdy)
 
-## Find boundary cell central SLon SLat in bathy grid. 
+## Find boundary cell central xlon ylat in rotated grid. 
     xlon, ylat = smcell(ncbdy, cel, zdlnlt)
 
-##  Convert rotated lat-lon into standard lat-lon values.
+## Convert rotated lat-lon into standard lat-lon values.
     SLat, SLon = eq2lldeg( ylat, xlon, Polat, Polon )
 
 ## Create cell vertices
     nvrts, ncels, svrts, scels, nsmrk = smcelvrts( cel, zdlnlt, rdpols, 
                   rngsxy, excids=nbdry)
 
-    print(" nsmrk, nbdy, ndry =", nsmrk, nbdy, ndry )
+    print(" nsmrk, nbdy, ndry =", nsmrk, nbdy, ndry)
 
 ## Save boundary cell sequential number list for the sub-grid.
     fmt = '%8d '
-    Bndylist = Wrkdir+GridNm+'Blst.dat'
+    Bndylist = Wrkdir+Gname+'Blst.dat'
 ## Boundary cell sequential numbers have to increase by 1 for WW3. JGLi06Oct2020
     np.savetxt(Bndylist, np.array(ncbdy)+1, fmt=fmt, header='',  comments='')
 
 ## Save the boundary cell SLon, SLat to generate boundary condition in WW3.
     hdr = f'{nbdy:8d} \n'
     fms = '%s '
-    Bndylnlt = Wrkdir+GridNm+'Blnlt.dat'
+    Bndylnlt = Wrkdir+Gname+'Blnlt.dat'
     with open(Bndylnlt, 'w') as flhd:
         flhd.writelines(hdr)
         for j in range(nbdy):
@@ -155,42 +176,49 @@ def main():
 ## Obstruction ratio is all 0 for this grid.
     kobstr = np.zeros((nc), dtype=int)
     hdrline = f"{nc:8d} {1:5d}"
-    np.savetxt(Wrkdir+GridNm+'Obst.dat', kobstr, fmt='%4d', header=hdrline, comments='')
+    Obsfile = Wrkdir+Gname+'Obst.dat'
+    np.savetxt(Obsfile, kobstr, fmt='%4d', header=hdrline, comments='')
 
 ## Set plot size and limits and message out anchor point.
-    config=np.array([rdpols, sztpxy, rngsxy, clrbxy])
-    pzfile=DatSMC+GridNm+'Vrts.npz'
+    ngabjm=[nc, npl, nbdy+ndry, ndry]
+    config=np.array([rdpols, sztpxy, rngsxy, clrbxy, ngabjm])
+    pzfile=DatGMC+Gname+'Vrts.npz'
 
 ## Store selected north and south verts and cell numbers for swh plots.
 ## Use the np.savez to save 3/5 variables in one file.  JGLi22Feb2019 
     np.savez( pzfile, nvrt=nvrts, ncel=ncels, cnfg=config) 
 
 ## These variables could be loaded back by
-#   vrtcls = np.load(DatSMC+GridNm+'Vrts.npz')
+#   vrtcls = np.load(DatGMC+Gname+'Vrts.npz')
 #   nvrts = vrtcls['nvrt'] ; ncels = vrtcls['ncel']; config=vrtcls['cnfg']; 
-#   svrts = vrtcls['svrt'] ; scels = vrtcls['scel']
 
-## Draw the regional grid plot.
-    epsfile=Wrkdir+GridNm+'grd.eps' 
-    fig, ax = plt.subplots(figsize=sztpxy[0:2])
+## Draw your selected grid plot.
+    epsfile=Wrkdir+Gname+'grd.eps' 
+    bufile=MCodes+'ECBuoys.dat'
+
+    fig = Figure(figsize=sztpxy[0:2])
+    ax = fig.subplots()
     smcgrids(ax, cel, nvrts,ncels,colrs,config, nmark=nsmrk[0]) 
+#            buoys=bufile, nmark=nsmrk[0]) 
 
-    xydxdy=[sztpxy[2],sztpxy[3], 0.0, -0.5]
+    xydxdy=[sztpxy[2],sztpxy[3], 0.0, -0.6]
     addtexts(ax, xydxdy, txtary)
 
-    plt.subplots_adjust(left=0.0,bottom=0.0,right=1.0,top=1.0)
+    fig.subplots_adjust(left=0.0,bottom=0.0,right=1.0,top=1.0)
 
+## Save the selected plot.
     print(" ...... Saving file ", epsfile)
-    plt.savefig(epsfile, dpi=None,facecolor='w',edgecolor='w', \
+    fig.savefig(epsfile, dpi=None,facecolor='w',edgecolor='w', \
                     orientation=papror)
-    plt.close()
+    fig.clear()
 
     print( " Program finished at %s " % datetime.now().strftime('%F %H:%M:%S') )
 
-## End of main() function.
+## End of main function.
+
 
 if __name__ == '__main__':
     main()
 
-## End of program AMM153kmGrids.py.
+## End of AMM153kmGrids program.
 
