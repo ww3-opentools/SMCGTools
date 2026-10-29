@@ -1,0 +1,28 @@
+## Sample Makefile for compile SMCGProp program.  JGLi02Jul2026 
+## For optional grid SMC36125 use make Grid=SMC36125 or make for SMC61250.
+
+SHELL=/bin/bash
+
+Grid ?= SMC61250
+CXXFLAGS = --std=c++17 -O2 -fopenmp -I./headers -D$(Grid) 
+
+SMCGProp : SMCGridProp.cpp  \
+           ./headers/SMCUNO2x.o    ./headers/readSMCELL.o   \
+           ./headers/SMCUNO2y.o    ./headers/readSMCSID.o   \
+           ./headers/SMCUNO3x.o    ./headers/SMCUNO3y.o     \
+           ./headers/Arctics.o     ./headers/SMCGradn.o     \
+           ./headers/ArctBndy.o    ./headers/Specturn.o     \
+           ./headers/Rotated.o     ./headers/SMCAverg.o     \
+           ./headers/Spectini.o    ./headers/WvSpectr.o     \
+           ./headers/GtCrTurn.o    ./headers/Spectrum.o     \
+           ./headers/SWHeight.o    ./headers/WvCGrpKIni.o   \
+           ./headers/RestrRead.o   ./headers/RestWrite.o \
+           ./headers/CTimeDate.o   ./headers/PrintVector.o
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
+%.o : ./headers/%.cpp
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
+
+clean :
+	rm -rf ./headers/*.o  
+

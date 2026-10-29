@@ -1,0 +1,24 @@
+## Sample Makefile for compile SclrProp program on SMC1d grid.  JGLi23Sep2026 
+
+SHELL=/bin/bash
+
+Grid ?= SMC1d
+## CXXFLAGS = --std=c++17 -I./headers -D$(Grid) 
+CXXFLAGS = --std=c++17 -O2 -fopenmp -I./headers -D$(Grid) 
+
+SclrProp : SMCSclrProp.cpp  \
+           ./headers/SMCUNO2x.o   ./headers/SMCUNO2y.o   \
+           ./headers/SMCUNO3x.o   ./headers/SMCUNO3y.o   \
+           ./headers/readSMCELL.o ./headers/readSMCSID.o \
+           ./headers/Arctics.o    ./headers/SMCGradn.o   \
+           ./headers/Rotated.o    ./headers/SMCAverg.o   \
+           ./headers/CTimeDate.o  ./headers/SMCUVIni.o   \
+           ./headers/ArcVSclr.o   ./headers/PrintVector.o
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
+%.o : ./headers/%.cpp
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
+
+clean :
+	rm -rf ./headers/*.o  
+
