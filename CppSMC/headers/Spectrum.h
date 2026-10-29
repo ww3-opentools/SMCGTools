@@ -1,0 +1,24 @@
+/* This Spectrum.h header file declare a group of parameters used for wave 
+ * spectral dimensions and storage variables.                JGLi26Jun2026  */
+
+#pragma once
+#include <vector>
+#include <cstddef>
+
+struct Spectrum {
+    std::size_t nfrq {0};
+    std::size_t ndrc {0};
+//  float Frqc0 {0.04118}, Frqc1 {0.0625}, Frqxf {1.1}; 
+    float Frqc0 {0.042688}, Frqc1 {0.0625}, Frqxf {1.1}; 
+    float Thta0, DThta; 
+    std::vector<float> sigma, dsgma, theta, cthta, sthta;
+};
+
+// Initial program for struct Spectrum. 
+void setSpectrum( std::size_t NFrq,  std::size_t NDrc );
+
+// Get read-only Spectrum variables.
+const Spectrum& getSpectrum();
+
+// End of Spectrum.h. 
+
