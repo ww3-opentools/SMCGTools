@@ -1,0 +1,43 @@
+#!/bin/bash
+
+##  Run CppSMC propagation test with OpenMP option on SMC61250 grid.
+##  Usage:  ./runCppSMCGMP  [Restart_File] 
+##  where Restart_File argument is used to restart from previous run. 
+##
+##  First created:   Jian-Guo Li    23 Sep 2026
+##  Last modified:   Jian-Guo Li    23 Sep 2026
+##
+
+echo $# $*
+if [ $# -ge 1 ]
+   then
+   RstrFile=$1
+   echo " Run will restart with restart file $RstrFile"
+else
+   RstrFile=' '
+fi
+
+Wrkdir='..'
+# rm $Wrkdir/tmpfls/*
+cd $Wrkdir/tmpfls/
+
+##  OpenMP threads for parallelization. 
+export OMP_NUM_THREADS=4
+
+ $Wrkdir/CppSMC/SMCGProp $RstrFile
+
+# Check run finished and save output files
+  CC=$?
+  if test $CC -ne 0
+  then
+    echo " *** CppSMCGProMP crashed !!! *** "
+  else
+##  Save output files
+    echo " *** CppSMCGProMP finished !!! *** "
+  fi
+  echo " All done."
+
+ echo " *** END *** "
+
+ exit 0
+

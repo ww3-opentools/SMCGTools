@@ -1,0 +1,6 @@
+RtdArc
+  68000   75000   3   ##  NCL,  NFC,  MRL
+    960     960   0   ##  NLon, NLat, NPol
+'../../MFTModel/RtdArc/DatGMC/RtdArcCels.dat'
+ .FALSE.
+

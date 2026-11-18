@@ -1,0 +1,43 @@
+#!/bin/bash
+
+##  Run CppSMC scalar solid rotation test with OpenMP option on SMC1d grid.
+##  Usage:  ./runCppScalr  [Deformation] 
+##  where Deformation argument is used for the deformation test.
+##
+##  First created:   Jian-Guo Li    23 Sep 2026
+##  Last modified:   Jian-Guo Li    23 Sep 2026
+##
+
+echo $# $*
+if [ $# -ge 1 ]
+   then
+   Deformtn=$1
+   echo " Run will be for deformation test $Deformtn"
+else
+   Deformtn=' '
+fi
+
+Wrkdir='..'
+# rm $Wrkdir/tmpfls/*
+cd $Wrkdir/tmpfls/
+
+##  OpenMP threads for parallelization. 
+export OMP_NUM_THREADS=4
+
+ $Wrkdir/CppSMC/SclrProp $Deformtn
+
+# Check run finished and save output files
+  CC=$?
+  if test $CC -ne 0
+  then
+    echo " *** CppSclrProMP crashed !!! *** "
+  else
+##  Save output files
+    echo " *** CppSclrProMP finished !!! *** "
+  fi
+  echo " All done."
+
+ echo " *** END *** "
+
+ exit 0
+
