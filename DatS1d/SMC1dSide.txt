@@ -1,0 +1,15 @@
+
+  Spherical Multiple Cell Grid Face Array Output 
+
+  *** SMCGrid Name = SMC1d            *** 
+  *** CelFile is DatSMC/SMC1dCels.dat
+  For Arctic cell side is .True.
+  Global part cell NGLo  =        0
+  Global cells by sizes  = 36543467
+  Arctic NArc NArB NGLB  =    36050   36050       0
+  Size 1  NLon NLat No.s =      256     180
+  Polar cell for Arctic  =        2
+  Number SMCGrid Levels  =        1
+  Total number of U-face =    36048
+  Total number of V-face =    36304
+  Total OpenMP time  (s) =      2.48310E+01
