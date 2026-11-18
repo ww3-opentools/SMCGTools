@@ -218,7 +218,7 @@ def main():
                      vscle=swhscl, vunit='SWH m')
 
 ## Put statistic information inside plot ax.
-            xydxdy=[sztpxy[2], sztpxy[3]-0.5, 0.0, -0.6]
+            xydxdy=[sztpxy[2], sztpxy[3], 0.0, -0.6]
             addtexts(ax, xydxdy, txtary)
             fig.subplots_adjust(left=0.0,bottom=0.0,right=1.0,top=1.0)
 

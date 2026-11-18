@@ -53,16 +53,16 @@ def main():
         nxlne = flhdl.readline().split()
         npl = int(nxlne[0])
         print(" Number of polar cells = ", npl) 
-## Fifth line stores the rotated polon and polat values.
-        nxlne = flhdl.readline().split()
-        Polon = float(nxlne[0])
-        Polat = float(nxlne[1])
-        print(" Rotated N Polon Polat = ", Polon, Polat) 
-## Final line is the SWH files and propagation test output directories.
+## Fifth line is the SWH files and propagation test output directories.
         nxlne = flhdl.readline().split()
         SWHdir=nxlne[0]
         OutDat=nxlne[1]
         print(" SWH and Prop OutDat = \n", nxlne)
+## Final line stores the rotated polon and polat values.
+        nxlne = flhdl.readline().split()
+        Polon = float(nxlne[0])
+        Polat = float(nxlne[1])
+        print(" Rotated N Polon Polat = ", Polon, Polat) 
 ## End of reading grid information file.
 
 ## Read global and Arctic part cells. 

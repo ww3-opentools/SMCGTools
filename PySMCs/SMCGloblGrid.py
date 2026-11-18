@@ -137,7 +137,7 @@ def main():
         plon=  0.0
         plat= 69.0
         clrbxy=[  8.0, -4.5,   0.8,  7.0]
-        sztpxy=[ 11.0, 15.0,   4.0, -6.0]
+        sztpxy=[ 11.0, 15.0,   5.0, -5.5]
         rngsxy=[-11.0, 11.0, -15.0, 15.0]
 
     if( pltype == 'Meditrn'):

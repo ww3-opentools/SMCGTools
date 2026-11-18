@@ -1,0 +1,5 @@
+ SMC1d  1 level SWE grid zlon zlat dlon dlat for siz-1 cells. JGLi12May2025
+  0.0  -0.5  1.40625  1.0
+ ../tmpfls/   ../DatS1d/ 
+  2  0  Numbers of polar cells and Arctic parts. 0 implies no Arctic part.
+

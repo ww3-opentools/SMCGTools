@@ -1,0 +1,5 @@
+ SMCHfd 1 leve SWE grid zlon zlat dlon dlat  JGLi12May2025 
+  0.0  0.0  0.703125  0.5
+ ../tmpfls/  ../DatHfd/ 
+  2  2  Numbers of polar cells and Arctic parts. 0 implies no Arctic part.
+

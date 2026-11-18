@@ -3,7 +3,7 @@
 ##
 ## First created:    JGLi12Sept2005
 ## Converted into Python.    JGLi20Dec2018
-## Last modified:    JGLi12Aug2025
+## Last modified:    JGLi10Nov2026
 ##
 """
 
@@ -50,7 +50,8 @@ def main( ):
 ## Fourth line starts with the number of polar cells.
         nxlne = flhdl.readline().split()
         npl = int(nxlne[0])
-        print(" Number of polar cells = ", npl)
+        mAr = int(nxlne[1])
+        print(" Numbers of polar cells and parts = ", npl, mAr)
 ## Fifty line is the SWH files and propagation test output directories.
         nxlne = flhdl.readline().split()
         SWHdir=nxlne[0]
@@ -60,14 +61,14 @@ def main( ):
 
 ## Read the cell array and Arctic part if any.
     Cel_file = [ DatGMC+Gname+'Cels.dat' ]
-    if( npl > 0 ):
+    if( mAr > 0 ):
         Arc_file = DatGMC+Gname+'BArc.dat'
         Cel_file.append( Arc_file )
 
     headrs, cel = readcell( Cel_file )
     ng = int( headrs[0].split()[0] )
     nc = ng
-    if( npl > 0 ):
+    if( mAr > 0 ):
         NArB = headrs[1].split()
         na = int( NArB[0] )
         nb = int( NArB[1] )
@@ -83,7 +84,7 @@ def main( ):
     colrs = rgbcolor( colrfile )
 
 ## Possible selection of your plot types. 
-    gorloc={0:'Global',1:'EuroArc',2:'Pacific',3:'Regular'}
+    gorloc={0:'Global',1:'EuroArc',2:'Pacific',3:'Regular',4:'RtdArc'}
 
 ## Prompt selection choices and ask for one input
     print (" \n ", gorloc)
@@ -194,7 +195,7 @@ def main( ):
                  [ Gname+' SWH m',    'r', fntsb] ]
 
 ## Call function to draw the swh plot.
-        epsfl = Wrkdir+'Hs'+pltype[0:2]+cfiles[nn][2:7]+'.eps'
+        epsfl = Wrkdir+'Hs'+pltype[0:2]+cfiles[nn][3:8]+'.eps'
         fig = plt.figure( figsize=(sztpxy[0:2]) )
 
         if( pltype == 'Global' ):
