@@ -20,7 +20,8 @@ constexpr double Temp0C = 273.16;
 constexpr double RDryAr = 287.05;
 constexpr double REarth = 6.371E6; 
 constexpr double AngulS = 7.2921E-5;
-constexpr double Ang36H = 4.8481E-5;
+constexpr double Ang36H = 4.84813681E-5; // TPie/(36*3600)
+constexpr double AguDfm = 2.59807621;    // 1.5*SQRT(3)
 constexpr double CLight = 2.99792458E8;
 
 /** @brief Density of water (kg/m^3).  */

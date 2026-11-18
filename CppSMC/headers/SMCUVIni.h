@@ -7,7 +7,7 @@
 
 struct ECLonLat {
     std::size_t nsea {0};
-    float AguDfm {2.59808f}; 
+//  float AguDfm {2.59808f}; // Defined in SMConsts.h.
     float PLonDf {-178.568f}, PLatDf {81.818f}; 
     std::vector<float> ECLon, ECLat;
 };

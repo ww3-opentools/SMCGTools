@@ -181,7 +181,7 @@ int SMCUVDfm( Propxy& Pro ) {
     cout << " Calling lltoeqangled ... \n";
     lltoeqangled(ra, NCel);   // ra passes the reference pointer not the data.
 
-    float Alpha, Omega, DfSpd, AguDfm = ECLL.AguDfm; 
+    float Alpha, Omega, DfSpd; 
     cout << " Calculating cell centre velocities AguDfm = " << AguDfm << "\n"; 
     for (int i=0; i<NCel; i++) {
         Alpha = 3.0f*cos(ra.elat[i]*D2Rad);
@@ -269,7 +269,7 @@ int SMCNTDfm( std::vector<float>& CNT, float Time ) {
         return(1);
     }
         
-    float Alpha, Omega, DfSpd, AguDfm = ECLL.AguDfm; 
+    float Alpha, Omega, DfSpd; 
     cout << " Calculating analytical solution with AguDfm = " << AguDfm 
          << " at time = "<< Time <<'\n'; 
     for (int i=0; i<NSea; i++) {
