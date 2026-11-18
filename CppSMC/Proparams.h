@@ -10,8 +10,9 @@
  ***************************************************************************/
 
 // Set spectral dimensions as global size_t constants.
-    const std::size_t NFrq = 30;
-    const std::size_t NDrc = 24;
+//  const std::size_t NFrq = 30;
+    const std::size_t NFrq = 1;
+    const std::size_t NDrc = 36;
 
 // Output file name and default restart file saved at run end.
     std::string Flnm{}, Msgs{};

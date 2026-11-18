@@ -21,6 +21,8 @@ using namespace std;
 #include "SMC61250.h"
 #elif SMC1R3
 #include "SMC1R3.h"
+#elif SMCHfd
+#include "SMCHfd.h"
 #else  
 #include "SMC1d.h"
 #endif /* SMC61250 */
@@ -212,23 +214,34 @@ int main(int argc, char *argv[]) {
        fmsg << " * UNO3 scheme will be used. \n";
    }
 
-   // Set up timestep, number of steps, and writeup interval.
-   float DT = 120.0;
-   if( Deform ) DT = 0.02;
-   int  NTS = 1080;  // For one round 36 hr rotation.
-   if( Deform ) NTS = 1000;
-   int  NWP = 90;   // Every 3 hrs.
-   if( Deform ) NWP = 50;
-   cout <<" * Starting NT = 1 until NTS = "<< NTS <<" NWP = "<< NWP << endl;
-   fmsg <<" * Starting NT = 1 until NTS = "<< NTS <<" NWP = "<< NWP << endl;
-
-   // Work out the maximum diffusity for size-1 cell.
-   // Note that the diffusivity is measured in radian distance.
+   // Work out timestep by maximum CFL number and decide timestep loop count. 
    float dxh = grd.dlon*D2Rad*0.5;   // Minimum dx half the Equotor one.
    float dy1 = grd.dlat*D2Rad;       // dy for size-1 is a constant.
-   float dsmn = min(dxh, dy1);
-// float Adfmx = 0.1/(float)MLFc;   // Maximum Fourier number = 0.1.
-   float Adfmx = 0.0/(float)MLFc;   // Swithc off diffusion for SMC1d.
+   float dsmn = min(dxh, dy1);       // Minimum cell side length in radian.
+   // Set up timestep, number of steps, and writeup interval.
+   float DT;
+   int NTS, NWP;
+   if( Deform ) { // Deformation test.
+   //  float cfldt = CFL_Advctn*dsmn*MLFc/(0.82839*AguDfm);
+       float cfldt = CFL_Advctn*dsmn*MLFc/(0.6*AguDfm);
+       int nt1 = static_cast<int>( 1.0/cfldt );
+       DT = 1.0/(float)nt1;
+       NTS = 20 * nt1;
+       NWP = nt1;
+   }
+   else {  // Solid rotation test.
+       float cfldt = CFL_Advctn*dsmn*MLFc/Ang36H;
+       int nhr = static_cast<int>( 600.0/cfldt + 1 )*6;
+       DT = 3600.0/nhr;
+       NTS = 36*nhr;
+       NWP =  3*nhr;
+   }
+   cout <<" * Timestep DT = "<< DT <<" NTS = "<< NTS <<" NWP = "<< NWP << endl;
+   fmsg <<" * Timestep DT = "<< DT <<" NTS = "<< NTS <<" NWP = "<< NWP << endl;
+
+   // Work out the maximum diffusity for size-1 cell.
+// float Adfmx = Fourier_Df/(float)MLFc;   // Use maximum Fourier number = 0.25.
+   float Adfmx = 0.0;   // Swithc off diffusion for both tests. 
    cout << " * Maximum size-1 diffusion Fourier number = " << Adfmx << "\n";
    fmsg << " * Maximum size-1 diffusion Fourier number = " << Adfmx << "\n";
    Pro.ADfu = Adfmx;
